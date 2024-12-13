@@ -87,7 +87,7 @@ export default function Chat() {
   };
 
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex flex-col h-screen bg-gray-100 dark:bg-gray-900">
       <div className="flex-0 border-b dark:border-gray-700 p-4">
         <h1 className="text-2xl font-bold text-center text-gray-900 dark:text-white">
           IBRL Agent
@@ -116,7 +116,16 @@ export default function Chat() {
                     em: ({node, ...props}) => <em className="text-blue-400 not-italic tracking-wider" {...props} />,
                     strong: ({node, ...props}) => <strong className="text-blue-500 tracking-wider" {...props} />,
                     code: ({node, ...props}) => <code className="bg-gray-800 dark:bg-gray-700 rounded px-1 font-mono" {...props} />,
-                    p: ({node, ...props}) => <p className="tracking-wide leading-relaxed" {...props} />
+                    p: ({node, ...props}) => <p className="tracking-wide leading-relaxed" {...props} />,
+                    img: ({node, ...props}) => (
+                      <div className="my-4">
+                        <img
+                          {...props}
+                          className="rounded-lg shadow-lg max-w-full h-auto mx-auto"
+                          loading="lazy"
+                        />
+                      </div>
+                    )
                   }}
                 >
                   {message.content}

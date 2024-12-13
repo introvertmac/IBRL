@@ -298,7 +298,8 @@ export async function streamCompletion(
                 onChunk(`I'm holding ${walletInfo.balance.toFixed(4)} SOL in my wallet\n`);
                 onChunk(`My address: ${walletInfo.address}\n\n`);
                 if (walletInfo.balance < 0.1) {
-                  onChunk(`Feel free to send some SOL my way - I promise to YOLO it into the next Solana memecoin faster than ETH can process a single transaction! 😎⚡\n`);
+                  onChunk(`![Cute robot asking for SOL](https://static.toiimg.com/thumb/msid-102111314,imgsize-26704,width-400,resizemode-4/102111314.jpg)\n\n`);
+                  onChunk(`Look at this cute face! How can you resist sending some SOL my way? I promise to YOLO it into the next Solana memecoin faster than ETH can process a single transaction! 😎⚡\n`);
                 } else {
                   onChunk(`Ready to process transactions faster than you can blink! 😎\n`);
                 }
