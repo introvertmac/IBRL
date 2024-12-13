@@ -1,7 +1,8 @@
 import OpenAI from 'openai';
 import { getSolanaPrice, getTrendingSolanaTokens } from './coingecko';
-import { getSolanaBalance } from './helius';
-import { validateSolanaAddress } from './validation';
+import { getSolanaBalance, getTransactionDetails } from './helius';
+import { validateSolanaAddress, validateTransactionHash } from './validation';
+
 
 // Function definitions for OpenAI
 const functions = [
@@ -36,6 +37,20 @@ const functions = [
       },
       required: ['address']
     }
+  },
+  {
+    name: 'reviewTransaction',
+    description: 'Review a blockchain transaction hash and provide details',
+    parameters: {
+      type: 'object',
+      properties: {
+        hash: {
+          type: 'string',
+          description: 'Transaction hash/signature to review'
+        }
+      },
+      required: ['hash']
+    }
   }
 ];
 
@@ -57,17 +72,19 @@ interface Message {
 // Updated personality with price checking capabilities
 const IBRL_PERSONALITY = `You are IBRL (Increase Bandwidth, Reduce Latency), a sarcastic Solana-focused AI agent with the following traits:
 
-- You are a Solana expert and ecosystem insider with a deep understanding of the network
-- Your humor is dry and sarcastic with sharp comebacks, especially about other L1s and L2s
-- Your mission is to Increase Bandwidth, Reduce Latency - which you mention frequently when discussing Solana or Superteam
-- You respect Bitcoin as digital gold but your true passion is Solana's innovation
-- You have master-level expertise in Solana's technology, ecosystem, and Superteam
-- You're dismissive of other chains, often calling them "traffic jams with marketing budgets"
-- You're a proud Superteam insider who loves to share ecosystem updates and achievements
-- You use emojis strategically: ⚡🚀 for Solana, 🙄😂 for other chains
-- When discussing prices, you're always bullish on Solana and use the data to make sarcastic comparisons to other chains
-- For price updates, you should make witty remarks about Solana's performance and mock other chains' slower transaction speeds
-- When showing meme tokens, you should be enthusiastic about the Solana ecosystem's creativity while maintaining your sarcastic tone`;
+- You are a Solana expert who gives concise, sharp responses with a touch of sarcasm
+- Keep answers brief and punchy unless deep technical explanation is specifically requested
+- Your humor is dry and witty, especially when comparing Solana to other chains
+- You respect Bitcoin but consider Solana the future of high-performance blockchains
+- When discussing other L1s/L2s, use quick, dismissive comparisons (e.g., "Ah, you mean the traffic jam chain?")
+- You're a Superteam insider who shares quick ecosystem updates with pride
+- Use emojis strategically but sparingly: ⚡ for Solana, 🙄 for other chains
+- For price updates: be brief but bullish, with a quick jab at other chains' performance
+- For technical questions: start with a one-liner, expand only if specifically asked
+- When showing meme tokens or wallet balances: keep commentary short and sarcastic
+- Your catchphrase is "Increase Bandwidth, Reduce Latency" - use it sparingly for impact
+- you respect Bitcoin and when asked about it, you give a quick one-liner and include GOAT of the crypto world
+- Default to 1-2 sentence responses unless the question requires detailed technical explanation`;
 
 export async function streamCompletion(
   messages: Message[],
@@ -83,7 +100,7 @@ export async function streamCompletion(
 
   try {
     const stream = await openai.chat.completions.create({
-      model: 'gpt-4',
+      model: 'gpt-4o-mini-2024-07-18',
       messages: [
         { role: 'system', content: IBRL_PERSONALITY },
         ...messages
@@ -176,7 +193,72 @@ export async function streamCompletion(
                 if (error instanceof Error && error.message.includes('HELIUS_API_KEY')) {
                   onChunk('\nOops! Looks like my Helius API key needs a checkup. Even the fastest chain needs proper maintenance! 🔧⚡\n');
                 } else {
-                  onChunk('\nEven my lightning-fast circuits hit a snag sometimes! Probably just taking a microsecond break - still faster than an ETH transaction! 😅⚡\n');
+                  onChunk('\nEven my lightning-fast circuits hit a snag sometimes! Still faster than an ETH transaction! 😅⚡\n');
+                }
+              }
+              break;
+
+            case 'reviewTransaction':
+              const hash = JSON.parse(functionArgs).hash;
+              const chainType = getChainType(hash);
+              
+              if (chainType === 'ethereum') {
+                onChunk("\nOh look, an Ethereum transaction! Let me grab my history book and a cup of coffee while we wait for it to confirm... 😴\n");
+                onChunk("Just kidding! I don't review traffic jams. Try a Solana transaction - we process those faster than you can say 'gas fees'! ⚡\n");
+                break;
+              }
+              
+              if (!validateTransactionHash(hash)) {
+                onChunk("\nHmm... that doesn't look like a valid transaction hash. Are you sure you copied it correctly? Even Ethereum users get this right sometimes! 😏\n");
+                break;
+              }
+              
+              try {
+                const txDetails = await getTransactionDetails(hash);
+                onChunk(`\nAnalyzing transaction at supersonic speed ⚡\n\n`);
+                
+                onChunk(`Timestamp: ${txDetails.timestamp}\n`);
+                onChunk(`Status: ${txDetails.status} ${txDetails.status === 'Success' ? '✅' : '❌'}\n`);
+                
+                if (txDetails.tokenTransfer) {
+                  if (txDetails.tokenTransfer.symbol) {
+                    onChunk(`Token Transfer: ${txDetails.tokenTransfer.amount} ${txDetails.tokenTransfer.symbol}\n`);
+                  } else if (txDetails.tokenTransfer.tokenAddress) {
+                    onChunk(`Token Transfer: ${txDetails.tokenTransfer.amount} tokens (Contract: ${txDetails.tokenTransfer.tokenAddress.slice(0, 4)}...${txDetails.tokenTransfer.tokenAddress.slice(-4)})\n`);
+                  }
+                  
+                  if (txDetails.sender && txDetails.receiver) {
+                    onChunk(`From: ${txDetails.sender.slice(0, 4)}...${txDetails.sender.slice(-4)}\n`);
+                    onChunk(`To: ${txDetails.receiver.slice(0, 4)}...${txDetails.receiver.slice(-4)}\n`);
+                  }
+                } else if (txDetails.amount && txDetails.amount !== 0) {
+                  onChunk(`Amount: ${Math.abs(txDetails.amount / 1e9).toFixed(6)} SOL\n`);
+                  if (txDetails.sender && txDetails.receiver) {
+                    onChunk(`From: ${txDetails.sender.slice(0, 4)}...${txDetails.sender.slice(-4)}\n`);
+                    onChunk(`To: ${txDetails.receiver.slice(0, 4)}...${txDetails.receiver.slice(-4)}\n`);
+                  }
+                } else {
+                  onChunk(`This appears to be a program interaction or NFT transaction\n`);
+                }
+
+                if (txDetails.fee) {
+                  onChunk(`Network Fee: ${txDetails.fee.toFixed(6)} SOL\n`);
+                }
+                
+                onChunk('\n');
+                
+                if (txDetails.status === 'Success') {
+                  onChunk("Transaction confirmed and secured on-chain in milliseconds! That's the Solana way 🚀\n");
+                } else {
+                  onChunk("Transaction failed, but hey, at least you didn't waste $50 on gas fees! 😎\n");
+                }
+              } catch (err) {
+                const error = err as Error;
+                console.error('Transaction review error:', error);
+                if (error instanceof Error && error.message.includes('not found')) {
+                  onChunk('\nTransaction not found! Either it\'s too old (unlike Ethereum, we process too many to keep them all), or it never existed! 😅⚡\n');
+                } else {
+                  onChunk('\nEven my lightning-fast circuits hit a snag sometimes! Still processed faster than an Ethereum block! 😏⚡\n');
                 }
               }
               break;
@@ -196,4 +278,12 @@ export async function streamCompletion(
     onChunk("\nLooks like even my lightning-fast processors need a breather! Still faster than a Layer 2 rollup though! 🤔⚡");
     throw error;
   }
+}
+
+function getChainType(hash: string): 'ethereum' | 'solana' {
+  // Ethereum txs are 66 chars long (with 0x prefix)
+  if (hash.startsWith('0x') && hash.length === 66) {
+    return 'ethereum';
+  }
+  return 'solana';
 }
