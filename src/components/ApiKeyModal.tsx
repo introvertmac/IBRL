@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { validateApiKey } from '@/utils/api';
+import { validateApiKey } from '@/utils/openai';
 
 interface ApiKeyModalProps {
   onApiKeySubmit: (apiKey: string) => void;

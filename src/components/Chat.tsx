@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { streamCompletion } from '@/utils/api';
+import { streamCompletion } from '@/utils/openai';
 
 interface Message {
   role: 'system' | 'user' | 'assistant';
