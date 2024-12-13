@@ -25,3 +25,12 @@ body {
     )
     rgb(var(--background-start-rgb));
 }
+
+.assistant-message {
+  font-feature-settings: "ss02" on, "zero" on;
+  letter-spacing: 0.02em;
+}
+
+.user-message {
+  letter-spacing: normal;
+}
