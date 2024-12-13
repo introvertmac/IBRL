@@ -2,6 +2,7 @@ import OpenAI from 'openai';
 import { getSolanaPrice, getTrendingSolanaTokens } from './coingecko';
 import { getSolanaBalance, getTransactionDetails } from './helius';
 import { validateSolanaAddress, validateTransactionHash } from './validation';
+import { agentWallet } from './wallet';
 
 
 // Function definitions for OpenAI
@@ -50,6 +51,33 @@ const functions = [
         }
       },
       required: ['hash']
+    }
+  },
+  {
+    name: 'getAgentBalance',
+    description: 'Get the SOL balance of the agent\'s wallet',
+    parameters: {
+      type: 'object',
+      properties: {},
+      required: []
+    }
+  },
+  {
+    name: 'sendSOL',
+    description: 'Send SOL from agent wallet to specified address',
+    parameters: {
+      type: 'object',
+      properties: {
+        recipient: {
+          type: 'string',
+          description: 'Recipient Solana address'
+        },
+        amount: {
+          type: 'number',
+          description: 'Amount of SOL to send'
+        }
+      },
+      required: ['recipient', 'amount']
     }
   }
 ];
@@ -260,6 +288,53 @@ export async function streamCompletion(
                 } else {
                   onChunk('\nEven my lightning-fast circuits hit a snag sometimes! Still processed faster than an Ethereum block! 😏⚡\n');
                 }
+              }
+              break;
+
+            case 'getAgentBalance':
+              try {
+                const walletInfo = await agentWallet.getBalance();
+                onChunk(`\nChecking my own wallet at supersonic speed ⚡\n\n`);
+                onChunk(`I'm holding ${walletInfo.balance.toFixed(4)} SOL in my wallet\n`);
+                onChunk(`My address: ${walletInfo.address}\n\n`);
+                if (walletInfo.balance < 0.1) {
+                  onChunk(`Feel free to send some SOL my way - I promise to YOLO it into the next Solana memecoin faster than ETH can process a single transaction! 😎⚡\n`);
+                } else {
+                  onChunk(`Ready to process transactions faster than you can blink! 😎\n`);
+                }
+              } catch (error) {
+                onChunk('\nOops! Had trouble checking my wallet balance. Even speed demons need maintenance sometimes! 🔧⚡\n');
+              }
+              break;
+
+            case 'sendSOL':
+              const { recipient, amount } = JSON.parse(functionArgs);
+              if (!validateSolanaAddress(recipient)) {
+                onChunk("\nHold up! That's not a valid Solana address. Let's keep it on the fastest chain, shall we? ⚡\n");
+                break;
+              }
+              
+              try {
+                const result = await agentWallet.sendSOL(recipient, amount);
+                if (result.status === 'success') {
+                  onChunk(`\nTransaction complete at lightspeed! ⚡\n\n`);
+                  onChunk(`Successfully sent ${amount} SOL to ${recipient}\n`);
+                  onChunk(`Transaction signature: ${result.signature}\n\n`);
+                  onChunk(`While Ethereum users are still waiting for confirmations, we're already done! 🚀\n`);
+                } else {
+                  switch (result.message) {
+                    case 'insufficient_balance':
+                      onChunk("\nOops! Looks like I'm running a bit low on SOL. Even the fastest chain needs fuel! ⚡\n");
+                      break;
+                    case 'transaction_failed':
+                      onChunk("\nEven the fastest chain has its moments! Let's try that again, shall we? ⚡\n");
+                      break;
+                    default:
+                      onChunk("\nHmm, that transaction didn't go through. But hey, at least we're still faster than ETH! 😏⚡\n");
+                  }
+                }
+              } catch (error) {
+                onChunk('\nLooks like we hit a speed bump! Still faster than waiting for ETH gas prices to drop! 😏⚡\n');
               }
               break;
           }

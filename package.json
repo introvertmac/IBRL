@@ -14,7 +14,9 @@
     "openai": "^4.76.2",
     "react": "^18",
     "react-dom": "^18",
-    "react-markdown": "^9.0.1"
+    "react-markdown": "^9.0.1",
+    "@solana/web3.js": "^1.87.0",
+    "bip39": "^3.1.0"
   },
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.15",
