@@ -5,6 +5,7 @@ import { validateSolanaAddress, validateTransactionHash } from './validation';
 import { agentWallet } from './wallet';
 import { getJitoMEVRewards } from './jito';
 import { getTokenInfo, swapSolToToken } from './jup';
+import { getTrendingTokens } from './birdeye';
 
 
 // Function definitions for OpenAI
@@ -145,6 +146,20 @@ const functions = [
       },
       required: ['amountInSol']
     }
+  },
+  {
+    name: 'getBirdeyeTrending',
+    description: 'Get trending Solana tokens from Birdeye with detailed metrics',
+    parameters: {
+      type: 'object',
+      properties: {
+        limit: {
+          type: 'number',
+          description: 'Number of tokens to return (default: 10)'
+        }
+      },
+      required: []
+    }
   }
 ];
 
@@ -280,7 +295,7 @@ export async function streamCompletion(
             case 'getTrendingSolanaTokens':
               result = await getTrendingSolanaTokens();
               onChunk('\nAh, you want to see what\'s trending in the fastest memecoin ecosystem? Let me pull that data faster than you can say "gas fees" 😏\n\n');
-              onChunk('��� Top Trending Solana Tokens (while ETH is still processing your last transaction):\n\n');
+              onChunk(' Top Trending Solana Tokens (while ETH is still processing your last transaction):\n\n');
               
               result.forEach((token, index) => {
                 const changeEmoji = token.price_change_24h >= 0 ? '📈' : '📉';
@@ -591,6 +606,28 @@ export async function streamCompletion(
                 }
               } catch (error) {
                 onChunk('\nLooks like Jupiter took a quick coffee break! Still faster than an ETH swap though! 😏⚡\n');
+              }
+              break;
+
+            case 'getBirdeyeTrending':
+              try {
+                const { limit } = JSON.parse(functionArgs);
+                onChunk("\n🦅 Scanning the Solana skies with Birdeye's precision! Let me show you what's trending faster than you can say 'gas fees'! ⚡\n\n");
+                
+                const tokens = await getTrendingTokens(limit);
+                
+                onChunk("🔥 Top Trending Tokens by Volume:\n\n");
+                tokens.forEach((token, index) => {
+                  onChunk(`${index + 1}. ${token.name} (${token.symbol})\n`);
+                  onChunk(`   💰 24h Volume: $${token.v24hUSD.toLocaleString()}\n`);
+                  onChunk(`   📈 24h Change: ${token.v24hChangePercent.toFixed(2)}%\n`);
+                  onChunk(`   💧 Liquidity: $${token.liquidity.toLocaleString()}\n\n`);
+                });
+                
+                onChunk("\nWhile other chains are still loading their first token, we've already analyzed the entire market! 😎⚡\n");
+              } catch (error) {
+                console.error('Birdeye error:', error);
+                onChunk("\n😅 Looks like our bird's eye view is a bit cloudy! Even the fastest chain needs a quick breather sometimes! Try again in a flash! ⚡\n");
               }
               break;
           }

@@ -49,7 +49,7 @@ A sophisticated Solana-focused AI agent with chat interface.
   - Jito MEV analytics
   - CoinGecko price feeds
   - Jupiter Swap
-
+  - Birdeye API
 
 ## Prerequisites
 
@@ -66,6 +66,7 @@ NEXT_PUBLIC_HELIUS_API_KEY=your_helius_api_key
 WALLET_MNEMONIC=your_wallet_mnemonic
 CROSSMINT_API_KEY=your_crossmint_api_key
 NEXT_PUBLIC_QUICKNODE_RPC_URL=your_quicknode_rpc_url # optional backup for helius
+NEXT_PUBLIC_BIRDEYE_API_KEY=your_birdeye_api_key
 ```
 
 ## Getting Started
@@ -106,8 +107,16 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 ├── src/
 │   ├── app/
 │   │   ├── api/
+│   │   │   └── birdeye/
+│   │   │       └── trending/
+│   │   │           └── route.ts
 │   │   │   └── crossmint/
 │   │   │       └── route.ts
+│   │   │   └── wallet/
+│   │   │       └── balance/
+│   │   │           └── route.ts
+│   │   │       └── send/
+│   │   │           └── route.ts
 │   │   ├── layout.tsx
 │   │   ├── page.tsx
 │   │   └── globals.css
@@ -122,6 +131,7 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 │       ├── jito.ts
 │       └── openai.ts
 │       └── jup.ts
+│       └── birdeye.ts
 ├── public/
 │   └── assets/
 ├── types/
@@ -154,6 +164,12 @@ POST /api/wallet/send
 │   ├── recipient: string
 │   └── amount: number
 └── Returns: Transaction signature
+
+GET /api/birdeye/trending
+├── Get trending tokens from Birdeye
+├── Parameters:
+│   ├── limit: number (default: 10)
+└── Returns: List of trending tokens
 ```
 
 ## License
