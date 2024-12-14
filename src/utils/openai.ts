@@ -4,6 +4,7 @@ import { getSolanaBalance, getTransactionDetails } from './helius';
 import { validateSolanaAddress, validateTransactionHash } from './validation';
 import { agentWallet } from './wallet';
 import { getJitoMEVRewards } from './jito';
+import { getTokenInfo } from './jup';
 
 
 // Function definitions for OpenAI
@@ -111,6 +112,20 @@ const functions = [
         }
       },
       required: ['epoch']
+    }
+  },
+  {
+    name: 'searchToken',
+    description: 'Search for token information using mint address',
+    parameters: {
+      type: 'object',
+      properties: {
+        mintAddress: {
+          type: 'string',
+          description: 'SPL token mint address'
+        }
+      },
+      required: ['mintAddress']
     }
   }
 ];
@@ -402,7 +417,7 @@ export async function streamCompletion(
                 }
               } catch (error) {
                 if (error instanceof Error && error.message === 'Wallet initialization required') {
-                  onChunk('\nOh snap! My high-performance wallet needs a quick reboot - even Solana validators take breaks sometimes! Give me a microsecond to sync up! ��\n');
+                  onChunk('\nOh snap! My high-performance wallet needs a quick reboot - even Solana validators take breaks sometimes! Give me a microsecond to sync up! ����\n');
                 } else if (error instanceof Error && error.message === 'Wallet not initialized') {
                   onChunk('\nHold your horses! My quantum wallet circuits are still warming up. This will only take a second! ⚡\n');
                 } else {
@@ -519,6 +534,31 @@ export async function streamCompletion(
                 } else {
                   onChunk("\n😅 Looks like our MEV tracker is taking a quick break! Even the fastest chain needs a microsecond of downtime - still faster than an Ethereum block confirmation though! ⚡\n");
                 }
+              }
+              break;
+
+            case 'searchToken':
+              const { mintAddress } = JSON.parse(functionArgs);
+              try {
+                const tokenInfo = await getTokenInfo(mintAddress);
+                
+                if (!tokenInfo) {
+                  onChunk("\n🔍 Hmm... This token is playing hide and seek! Either it's so new even my lightning-fast scanners can't find it, or it's not a valid SPL token. Even Ethereum tokens are easier to find sometimes! 😏⚡\n");
+                  break;
+                }
+
+                onChunk(`\n⚡ Token Found! Let me pull that data faster than an Ethereum block confirmation:\n\n`);
+                onChunk(`🎯 CoinGecko ID: ${tokenInfo.coingeckoId || 'Not available (probably too fast for CoinGecko! 😎)'}\n`);
+                onChunk(`📊 24h Volume: $${tokenInfo.dailyVolume.toLocaleString(undefined, { maximumFractionDigits: 2 })}\n\n`);
+                
+                if (tokenInfo.coingeckoId) {
+                  onChunk(`🦎 Want more details? While other chains are still loading their data, [check out more on CoinGecko](https://www.coingecko.com/en/coins/${tokenInfo.coingeckoId}) \n\n`);
+                }
+                
+                onChunk("That's how we do it on Solana - query, analyze, and deliver before others even start their gas fee calculations! 🚀⚡\n");
+              } catch (error) {
+                console.error('Token search error:', error);
+                onChunk("\n😅 Even my high-speed circuits need a breather sometimes! But hey, at least we're not waiting for Ethereum gas prices to drop! Try again in a microsecond! ⚡\n");
               }
               break;
           }

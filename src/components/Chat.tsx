@@ -109,6 +109,19 @@ const MarkdownComponents = {
         {props.children}
       </code>
     );
+  },
+  // Add custom link handling
+  a: (props: any) => {
+    return (
+      <a 
+        href={props.href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-blue-400 hover:text-blue-500 underline"
+      >
+        {props.children}
+      </a>
+    );
   }
 };
 
