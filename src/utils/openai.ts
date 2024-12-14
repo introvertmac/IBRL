@@ -79,6 +79,24 @@ const functions = [
       },
       required: ['recipient', 'amount']
     }
+  },
+  {
+    name: 'mintNFT',
+    description: 'Mint a compressed NFT on Solana using provided image URL and recipient address',
+    parameters: {
+      type: 'object',
+      properties: {
+        recipient: {
+          type: 'string',
+          description: 'Solana wallet address to receive the NFT'
+        },
+        image: {
+          type: 'string',
+          description: 'URL of the image to use for the NFT'
+        }
+      },
+      required: ['recipient', 'image']
+    }
   }
 ];
 
@@ -266,7 +284,7 @@ export async function streamCompletion(
               const chainType = getChainType(hash);
               
               if (chainType === 'ethereum') {
-                onChunk("\nOh look, an Ethereum transaction! Let me grab my history book and a cup of coffee while we wait for it to confirm... 😴\n");
+                onChunk("\nOh look, an Ethereum transaction! Let me grab my history book and a cup of coffee while we wait for it to confirm... ���\n");
                 onChunk("Just kidding! I don't review traffic jams. Try a Solana transaction - we process those faster than you can say 'gas fees'! ⚡\n");
                 break;
               }
@@ -369,7 +387,7 @@ export async function streamCompletion(
                 }
               } catch (error) {
                 if (error instanceof Error && error.message === 'Wallet initialization required') {
-                  onChunk('\nOh snap! My high-performance wallet needs a quick reboot - even Solana validators take breaks sometimes! Give me a microsecond to sync up! ⚡\n');
+                  onChunk('\nOh snap! My high-performance wallet needs a quick reboot - even Solana validators take breaks sometimes! Give me a microsecond to sync up! ��\n');
                 } else if (error instanceof Error && error.message === 'Wallet not initialized') {
                   onChunk('\nHold your horses! My quantum wallet circuits are still warming up. This will only take a second! ⚡\n');
                 } else {
@@ -406,6 +424,53 @@ export async function streamCompletion(
                 }
               } catch (error) {
                 onChunk('\nLooks like we hit a speed bump! Still faster than waiting for ETH gas prices to drop! 😏⚡\n');
+              }
+              break;
+
+            case 'mintNFT':
+              const mintParams = JSON.parse(functionArgs);
+              if (!validateSolanaAddress(mintParams.recipient)) {
+                onChunk("\nWhoa there! That wallet address looks more lost than an Ethereum user trying to pay less than $100 in gas fees! Let's stick to valid Solana addresses, shall we? ⚡\n");
+                break;
+              }
+
+              try {
+                onChunk("\n🚀 Firing up the NFT minting turbines! While other chains are still calculating gas fees, we're about to mint faster than you can say 'Solana Summer'! ⚡\n");
+                
+                const fullMintParams = {
+                  ...mintParams,
+                  name: "IBRL NFT",
+                  description: "IBRL NFT minted on chain - Faster than an Ethereum transaction! ⚡"
+                };
+
+                const response = await fetch('/api/crossmint', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify(fullMintParams),
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                  throw new Error(result.error || 'Minting failed');
+                }
+
+                onChunk("\n✨ BOOM! NFT minted at lightspeed! While Ethereum users are still waiting for their transaction to confirm, we're already done! 🚀\n\n");
+                onChunk(`📬 Delivered to: ${mintParams.recipient}\n`);
+                onChunk(`🔗 Transaction ID: ${result.id}\n\n`);
+                onChunk("💫 Your IBRL NFT is now living its best life on the fastest chain in the universe! Remember, while other chains talk about scaling, we're already scaled! 😎⚡\n\n");
+                onChunk("⏳ It might take 30 seconds to deliver the NFT - still faster than getting through an Ethereum gas auction! 😏✨\n");
+              } catch (error) {
+                console.error('NFT minting error:', error);
+                if (error instanceof Error && error.message.includes('Invalid')) {
+                  onChunk("\n😅 Oops! Something's not quite right with your NFT details. Even Ethereum's ERC-721 standard is less picky! Let's try again with valid info! ⚡\n");
+                } else if (error instanceof Error && error.message.includes('rate limit')) {
+                  onChunk("\n⏰ Whoa there! We're going too fast even for Solana! Let's take a microsecond breather (still faster than an Ethereum block time!) 😏⚡\n");
+                } else {
+                  onChunk("\n🔧 Even the fastest chain has its moments! Our NFT minter needs a quick tune-up. But hey, at least we didn't waste $500 on a failed transaction like on Ethereum! 😎⚡\n");
+                }
               }
               break;
           }
