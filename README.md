@@ -50,7 +50,7 @@ Before you begin, ensure you have the following installed:
 2. Add the following environment variables:
 ```bash
 NEXT_PUBLIC_HELIUS_API_KEY=your_helius_api_key
-NEXT_PUBLIC_WALLET_MNEMONIC=your_wallet_mnemonic
+WALLET_MNEMONIC=your_wallet_mnemonic
 ```
 
 ## Getting Started
