@@ -47,7 +47,9 @@ A sophisticated Solana-focused AI agent with chat interface.
   - Crossmint NFT minting
   - Jito MEV analytics
   - CoinGecko price feeds
+  - Jupiter Swap
 
+  
 ## Prerequisites
 
 Before you begin, ensure you have the following installed:
