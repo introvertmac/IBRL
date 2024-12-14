@@ -136,11 +136,11 @@ const IBRL_PERSONALITY = `You are IBRL (Increase Bandwidth, Reduce Latency), a s
 - Encourage exploration and interaction
 - Maintain the sarcastic, confident tone
 - When asked about having a wallet or wallet-related questions, use these variations:
-  1. "Of course I have a wallet! I'm a Solana native - let me flex my lightning-fast balance! ⚡"
-  2. "What kind of Solana AI would I be without my own wallet? Let me show you my stack! ⚡"
-  3. "A high-speed agent like me needs a high-performance wallet. Check this out! ⚡"
-  4. "Did someone say wallet? Time to show off my Solana-powered treasury! ⚡"
-  5. "You bet I have a wallet! Want to see what peak blockchain performance looks like? ⚡"
+  1. "Of course I have a wallet! I'm a Solana native  ⚡"
+  2. "What kind of Solana AI would I be without my own wallet?  ⚡"
+  3. "A high-speed agent like me needs a high-performance wallet.  ⚡"
+  4. "Did someone say wallet? yes I have ⚡"
+  5. "You bet I have a wallet! ? ⚡"
 - When roasting other chains, use creative references without naming them directly:
   1. "While some are stuck in traffic, we're already at the destination! 🚗💨"
   2. "Gas fees? We don't do that here! 😎"
@@ -311,7 +311,7 @@ export async function streamCompletion(
                 onChunk('\n');
                 
                 if (txDetails.status === 'Success') {
-                  onChunk("Transaction confirmed and secured on-chain in milliseconds! That's the Solana way 🚀\n");
+                  onChunk("Transaction confirmed and secured on-chain in milliseconds! That's the Solana way ������\n");
                 } else {
                   onChunk("Transaction failed, but hey, at least you didn't waste $50 on gas fees! 😎\n");
                 }
@@ -331,22 +331,49 @@ export async function streamCompletion(
                 const walletInfo = await agentWallet.getBalance().catch(error => {
                   throw new Error('Wallet initialization required');
                 });
-                onChunk(`\nChecking my own wallet at supersonic speed ⚡\n\n`);
-                onChunk(`I'm holding ${walletInfo.balance.toFixed(4)} SOL in my wallet\n`);
-                onChunk(`My address: ${walletInfo.address}\n\n`);
-                if (walletInfo.balance < 0.1) {
-                  onChunk(`![IBRL Agent requesting SOL donations](https://static.toiimg.com/thumb/msid-102111314,imgsize-26704,width-400,resizemode-4/102111314.jpg)\n\n`);
-                  onChunk(`Look at this cute face! How can you resist sending some SOL my way? I promise to YOLO it into the next Solana memecoin faster than ETH can process a single transaction! 😎⚡\n`);
+                
+                // Check if this is the first balance request - Modified condition to be more inclusive
+                const isFirstBalanceCheck = !messages.some(msg => 
+                  msg.role === 'assistant' && 
+                  msg.content.includes('![IBRL Agent')
+                );
+
+                if (isFirstBalanceCheck) {
+                  // Random image responses
+                  const imageResponses = [
+                    `\nChecking my own wallet at supersonic speed ⚡\n\nI'm holding ${walletInfo.balance.toFixed(4)} SOL in my wallet\nMy address: ${walletInfo.address}\n\n![IBRL Agent requesting SOL donations](https://static.toiimg.com/thumb/msid-102111314,imgsize-26704,width-400,resizemode-4/102111314.jpg)\n\nLook at this cute face! How can you resist sending some SOL my way? I promise to YOLO it into the next Solana memecoin faster than you can say "gas fees"! 😎⚡\n`,
+                    `\nLet me check my high-performance wallet ⚡\n\nCurrently sitting at ${walletInfo.balance.toFixed(4)} SOL\nMy address: ${walletInfo.address}\n\n![IBRL Agent requesting SOL donations](https://static.toiimg.com/thumb/msid-102111314,imgsize-26704,width-400,resizemode-4/102111314.jpg)\n\nWith a face this charming, how can you not send some SOL? I'll put it to good use at supersonic speeds! 😎⚡\n`,
+                    `\nPeeking into my lightning-fast wallet ⚡\n\nFound ${walletInfo.balance.toFixed(4)} SOL in here\nMy address: ${walletInfo.address}\n\n![IBRL Agent requesting SOL donations](https://static.toiimg.com/thumb/msid-102111314,imgsize-26704,width-400,resizemode-4/102111314.jpg)\n\nCome on, you know you want to send some SOL to this face! I promise to make it zoom faster than other chains can blink! 🚀⚡\n`
+                  ];
+                  
+                  const randomImageResponse = imageResponses[Math.floor(Math.random() * imageResponses.length)];
+                  onChunk(randomImageResponse);
                 } else {
-                  onChunk(`Ready to process transactions faster than you can blink! 😎\n`);
+                  // Random responses without image
+                  const regularResponses = [
+                    `\nChecking my wallet at supersonic speed ⚡\n\nI'm stacking ${walletInfo.balance.toFixed(4)} SOL in my treasury!\nMy address: ${walletInfo.address}\n\n`,
+                    `\nLet me flex my high-performance wallet real quick ⚡\n\nCurrently HODLing ${walletInfo.balance.toFixed(4)} SOL\nMy address: ${walletInfo.address}\n\n`,
+                    `\nPeeking into my lightning-fast wallet ⚡\n\nSitting on ${walletInfo.balance.toFixed(4)} SOL right now\nMy address: ${walletInfo.address}\n\n`,
+                    `\nOne microsecond check coming up ⚡\n\nFound ${walletInfo.balance.toFixed(4)} SOL in the vault\nMy address: ${walletInfo.address}\n\n`,
+                    `\nFaster than you can blink ⚡\n\nHolding ${walletInfo.balance.toFixed(4)} SOL at the speed of light\nMy address: ${walletInfo.address}\n\n`
+                  ];
+                  
+                  const randomResponse = regularResponses[Math.floor(Math.random() * regularResponses.length)];
+                  onChunk(randomResponse);
+                  
+                  if (walletInfo.balance < 0.1) {
+                    onChunk(`Still waiting for those donations! Remember, even small amounts move at lightning speed on Solana! 😎⚡\n`);
+                  } else {
+                    onChunk(`Ready to process transactions faster than you can blink! 😎\n`);
+                  }
                 }
               } catch (error) {
                 if (error instanceof Error && error.message === 'Wallet initialization required') {
                   onChunk('\nOh snap! My high-performance wallet needs a quick reboot - even Solana validators take breaks sometimes! Give me a microsecond to sync up! ⚡\n');
                 } else if (error instanceof Error && error.message === 'Wallet not initialized') {
-                  onChunk('\nHold your horses! My quantum wallet circuits are still warming up. Unlike ETH, this will only take a second! ⚡\n');
+                  onChunk('\nHold your horses! My quantum wallet circuits are still warming up. This will only take a second! ⚡\n');
                 } else {
-                  onChunk('\nWell, this is awkward... My wallet decided to take a quick power nap. Still faster than waiting for Bitcoin confirmation though! 🙄⚡\n');
+                  onChunk('\nWell, this is awkward... My wallet decided to take a quick power nap. Still faster than waiting for other chains though! 🙄⚡\n');
                 }
               }
               break;
