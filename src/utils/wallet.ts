@@ -19,16 +19,46 @@ class AgentWallet {
   constructor() {
     const mnemonic = process.env.NEXT_PUBLIC_WALLET_MNEMONIC;
     const apiKey = process.env.NEXT_PUBLIC_HELIUS_API_KEY;
-    if (!mnemonic) {
-      throw new Error('Wallet mnemonic not configured');
+
+    if (!mnemonic || !apiKey) {
+      const missingVars = [];
+      if (!mnemonic) missingVars.push('NEXT_PUBLIC_WALLET_MNEMONIC');
+      if (!apiKey) missingVars.push('NEXT_PUBLIC_HELIUS_API_KEY');
+      
+      throw new Error(
+        `Missing required environment variables: ${missingVars.join(', ')}. ` +
+        'Please check your .env.local file and ensure all required variables are set.'
+      );
     }
 
-    const seed = bip39.mnemonicToSeedSync(mnemonic);
-    this.keypair = Keypair.fromSeed(Uint8Array.from(seed).subarray(0, 32));
-    this.connection = new Connection(
-      `https://mainnet.helius-rpc.com/?api-key=${apiKey}`,
-      'confirmed'
-    );
+    if (!bip39.validateMnemonic(mnemonic)) {
+      throw new Error(
+        'Invalid wallet mnemonic provided. ' +
+        'Please ensure your NEXT_PUBLIC_WALLET_MNEMONIC is a valid 12-word BIP39 mnemonic phrase.'
+      );
+    }
+
+    try {
+      const seed = bip39.mnemonicToSeedSync(mnemonic);
+      this.keypair = Keypair.fromSeed(Uint8Array.from(seed).subarray(0, 32));
+    } catch (error) {
+      throw new Error(
+        'Failed to generate wallet keypair from mnemonic. ' +
+        'Please check your mnemonic phrase and try again.'
+      );
+    }
+
+    try {
+      this.connection = new Connection(
+        `https://mainnet.helius-rpc.com/?api-key=${apiKey}`,
+        'confirmed'
+      );
+    } catch (error) {
+      throw new Error(
+        'Failed to establish Helius RPC connection. ' +
+        'Please verify your NEXT_PUBLIC_HELIUS_API_KEY is valid.'
+      );
+    }
   }
   
 
