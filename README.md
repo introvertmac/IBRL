@@ -1,4 +1,4 @@
-# IBRL (Increase Bandwidth, Reduce Latency) Agent
+# IBRL Agent
 
 <div align="center">
   <img src="public/IBRL.jpeg" alt="IBRL Agent" width="400" style="border-radius: 10px; margin: 20px 0; box-shadow: 0 4px 8px rgba(0,0,0,0.1);" />
