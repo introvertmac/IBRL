@@ -1,6 +1,7 @@
-# IBRL (Increase Bandwidth, Reduce Latency)
+# IBRL (Increase Bandwidth, Reduce Latency) Agent
 
 <div align="center">
+  <img src="public/IBRL.jpeg" alt="IBRL Agent" width="400" style="border-radius: 10px; margin: 20px 0; box-shadow: 0 4px 8px rgba(0,0,0,0.1);" />
 
 A sophisticated Solana-focused AI agent with chat interface.
 
@@ -49,7 +50,7 @@ A sophisticated Solana-focused AI agent with chat interface.
   - CoinGecko price feeds
   - Jupiter Swap
 
-  
+
 ## Prerequisites
 
 Before you begin, ensure you have the following installed:
