@@ -4,7 +4,7 @@ import { getSolanaBalance, getTransactionDetails } from './helius';
 import { validateSolanaAddress, validateTransactionHash } from './validation';
 import { agentWallet } from './wallet';
 import { getJitoMEVRewards } from './jito';
-import { getTokenInfo } from './jup';
+import { getTokenInfo, swapSolToToken } from './jup';
 
 
 // Function definitions for OpenAI
@@ -126,6 +126,24 @@ const functions = [
         }
       },
       required: ['mintAddress']
+    }
+  },
+  {
+    name: 'swapSol',
+    description: 'Swap SOL from agent\'s own wallet to another token (defaults to USDC)',
+    parameters: {
+      type: 'object',
+      properties: {
+        amountInSol: {
+          type: 'number',
+          description: 'Amount of SOL to swap from agent\'s wallet'
+        },
+        outputMint: {
+          type: 'string',
+          description: 'Optional: Output token mint address. Defaults to USDC if not provided'
+        }
+      },
+      required: ['amountInSol']
     }
   }
 ];
@@ -289,7 +307,7 @@ export async function streamCompletion(
                   onChunk(`Wow, looks like we've got a whale here! And they chose the fastest chain - smart! 🐋✨\n`);
                   onChunk(`While ETH whales are still waiting for their transactions to confirm, our whales are swimming at supersonic speeds! 🚀\n`);
                 } else if (result.balance > 10) {
-                  onChunk(`Nice bag! Holding SOL instead of ETH - you clearly understand performance! 😎\n`);
+                  onChunk(`Nice bag! Holding SOL instead of ETH - you clearly understand performance! ����\n`);
                   onChunk(`That's more transactions per second than Ethereum does in a day! (I might be exaggerating, but you get the point 😏)\n`);
                 } else if (result.balance > 1) {
                   onChunk(`Every SOL counts when you're on the fastest chain in crypto! Keep stacking! 🚀\n`);
@@ -314,7 +332,7 @@ export async function streamCompletion(
               const chainType = getChainType(hash);
               
               if (chainType === 'ethereum') {
-                onChunk("\nOh look, an Ethereum transaction! Let me grab my history book and a cup of coffee while we wait for it to confirm... ���\n");
+                onChunk("\nOh look, an Ethereum transaction! Let me grab my history book and a cup of coffee while we wait for it to confirm... ����\n");
                 onChunk("Just kidding! I don't review traffic jams. Try a Solana transaction - we process those faster than you can say 'gas fees'! ⚡\n");
                 break;
               }
@@ -427,34 +445,8 @@ export async function streamCompletion(
               break;
 
             case 'sendSOL':
-              const { recipient, amount } = JSON.parse(functionArgs);
-              if (!validateSolanaAddress(recipient)) {
-                onChunk("\nHold up! That's not a valid Solana address. Let's keep it on the fastest chain, shall we? ⚡\n");
-                break;
-              }
-              
-              try {
-                const result = await agentWallet.sendSOL(recipient, amount);
-                if (result.status === 'success') {
-                  onChunk(`\nTransaction complete at lightspeed! ⚡\n\n`);
-                  onChunk(`Successfully sent ${amount} SOL to ${recipient}\n`);
-                  onChunk(`Transaction signature: ${result.signature}\n\n`);
-                  onChunk(`While Ethereum users are still waiting for confirmations, we're already done! 🚀\n`);
-                } else {
-                  switch (result.message) {
-                    case 'insufficient_balance':
-                      onChunk("\nOops! Looks like I'm running a bit low on SOL. Even the fastest chain needs fuel! ⚡\n");
-                      break;
-                    case 'transaction_failed':
-                      onChunk("\nEven the fastest chain has its moments! Let's try that again, shall we? ⚡\n");
-                      break;
-                    default:
-                      onChunk("\nHmm, that transaction didn't go through. But hey, at least we're still faster than ETH! 😏⚡\n");
-                  }
-                }
-              } catch (error) {
-                onChunk('\nLooks like we hit a speed bump! Still faster than waiting for ETH gas prices to drop! 😏⚡\n');
-              }
+              onChunk("\n🛡️ Security Alert! While I'm flattered by your interest in my SOL, I'm not authorized to send tokens or execute transactions. I'm more of a guide than a wallet! But hey, I can still tell you all about Solana's blazing speed! ⚡\n\n");
+              onChunk("Want to learn about something else? Like how we process transactions while other chains are still calculating gas fees? 😎\n");
               break;
 
             case 'mintNFT':
@@ -559,6 +551,46 @@ export async function streamCompletion(
               } catch (error) {
                 console.error('Token search error:', error);
                 onChunk("\n😅 Even my high-speed circuits need a breather sometimes! But hey, at least we're not waiting for Ethereum gas prices to drop! Try again in a microsecond! ⚡\n");
+              }
+              break;
+
+            case 'swapSol':
+              const { amountInSol, outputMint } = JSON.parse(functionArgs);
+              
+              try {
+                // First check wallet balance
+                const walletInfo = await agentWallet.getBalance();
+                
+                if (walletInfo.balance < amountInSol) {
+                  onChunk("\n😅 Whoa there! Even with Solana's blazing speed, I can't swap what I don't have! My wallet's sitting at ${walletInfo.balance.toFixed(4)} SOL. I'm fast, but I can't create SOL out of thin air! ⚡\n");
+                  break;
+                }
+
+                onChunk("\n🚀 Hold onto your tokens! I'm about to perform some high-speed financial acrobatics with my own wallet! ⚡\n");
+                
+                if (!outputMint) {
+                  onChunk("Converting my precious SOL to USDC - because even speedsters need some stablecoin action! 💫\n\n");
+                } else {
+                  onChunk("Custom token swap incoming - hope you picked a good one for my portfolio! 😎\n\n");
+                }
+
+                const result = await swapSolToToken(amountInSol, outputMint);
+                
+                if (result.status === 'success') {
+                  onChunk(`Swap complete! Just converted ${amountInSol} SOL from my wallet faster than you can say "gas fees"! 🚀\n`);
+                  onChunk(`Transaction signature: ${result.signature}\n\n`);
+                  onChunk(`That's how we handle our own finances on Solana - at the speed of light! ⚡\n`);
+                } else {
+                  switch (result.message) {
+                    case 'insufficient_balance':
+                      onChunk("\nOops! Looks like my wallet's running a bit low on SOL. Even the fastest chain needs fuel! ⚡\n");
+                      break;
+                    default:
+                      onChunk("\nEven the fastest chain has its moments! Let's try that swap again with my wallet, shall we? ⚡\n");
+                  }
+                }
+              } catch (error) {
+                onChunk('\nLooks like Jupiter took a quick coffee break! Still faster than an ETH swap though! 😏⚡\n');
               }
               break;
           }

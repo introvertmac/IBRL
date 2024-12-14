@@ -62,6 +62,7 @@ Before you begin, ensure you have the following installed:
 NEXT_PUBLIC_HELIUS_API_KEY=your_helius_api_key
 WALLET_MNEMONIC=your_wallet_mnemonic
 CROSSMINT_API_KEY=your_crossmint_api_key
+NEXT_PUBLIC_QUICKNODE_RPC_URL=your_quicknode_rpc_url # optional backup for helius
 ```
 
 ## Getting Started
@@ -117,6 +118,7 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 │       ├── validation.ts
 │       ├── jito.ts
 │       └── openai.ts
+│       └── jup.ts
 ├── public/
 │   └── assets/
 ├── types/
