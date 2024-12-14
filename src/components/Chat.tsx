@@ -2,7 +2,15 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
 import Image from 'next/image';
 import { streamCompletion } from '@/utils/openai';
-import { IconArrowRight, IconBolt, IconCoin, IconWallet } from './Icon';
+import { IconArrowRight, IconBolt, IconCoin, IconWallet, IconMicrophone } from './Icon';
+
+// Add SpeechRecognition type
+declare global {
+  interface Window {
+    SpeechRecognition: any;
+    webkitSpeechRecognition: any;
+  }
+}
 
 interface Message {
   role: 'system' | 'user' | 'assistant';
@@ -132,6 +140,8 @@ export default function Chat() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messageUpdateTimeoutRef = useRef<NodeJS.Timeout>();
+  const [isListening, setIsListening] = useState(false);
+  const recognition = useRef<any>(null);
 
   const isInitialState = messages.length === 0;
 
@@ -162,6 +172,40 @@ export default function Chat() {
       }
     };
   }, [messages, scrollToBottom]);
+
+  useEffect(() => {
+    // Initialize speech recognition
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      recognition.current = new SpeechRecognition();
+      recognition.current.continuous = false;
+      recognition.current.interimResults = false;
+      recognition.current.lang = 'en-US';
+
+      recognition.current.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript;
+        setInput(transcript);
+      };
+
+      recognition.current.onerror = (event: any) => {
+        console.error('Speech recognition error:', event.error);
+        setIsListening(false);
+      };
+
+      recognition.current.onend = () => {
+        setIsListening(false);
+      };
+    }
+  }, []);
+
+  const toggleListening = () => {
+    if (isListening) {
+      recognition.current?.stop();
+    } else {
+      recognition.current?.start();
+      setIsListening(true);
+    }
+  };
 
   const updateMessages = useCallback((currentContent: string) => {
     setMessages(prev => {
@@ -294,6 +338,15 @@ export default function Chat() {
             rows={1}
             style={{ maxHeight: '200px' }}
           />
+          <button
+            type="button"
+            onClick={toggleListening}
+            className={`absolute right-14 bottom-2 top-2 px-4 ${
+              isListening ? 'text-red-500' : 'text-gray-500'
+            } hover:text-gray-700 transition-colors duration-200`}
+          >
+            <IconMicrophone className="w-5 h-5" />
+          </button>
           <button
             type="submit"
             disabled={isLoading || !input.trim()}
