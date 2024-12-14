@@ -1,6 +1,17 @@
-## IBRL (Increase Bandwidth, Reduce Latency)
+# IBRL (Increase Bandwidth, Reduce Latency)
 
-# 🚀 Features
+<div align="center">
+
+A sophisticated Solana-focused AI agent with chat interface.
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Next.js](https://img.shields.io/badge/Next.js-14-black)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)](https://www.typescriptlang.org/)
+[![Solana](https://img.shields.io/badge/Solana-1.87-purple)](https://solana.com/)
+
+</div>
+
+## 🚀 Features
 
 - **Real-time Solana Data**
   - Live price tracking and market analysis
@@ -46,7 +57,8 @@ NEXT_PUBLIC_WALLET_MNEMONIC=your_wallet_mnemonic
 
 1. Clone the repository:
 ```bash
-git clone [repository-url]
+git clone https://github.com/introvertmac/IBRL.git
+cd IBRL
 ```
 
 2. Install dependencies:
