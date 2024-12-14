@@ -34,3 +34,22 @@ body {
 .user-message {
   letter-spacing: normal;
 }
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.fade-in {
+  animation: fadeIn 0.5s ease-in;
+}
+
+.message-transition {
+  transition: all 0.3s ease-in-out;
+}
+
+textarea {
+  min-height: 24px;
+  max-height: 200px;
+  overflow-y: auto;
+}

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import ApiKeyModal from '@/components/ApiKeyModal';
 import Chat from '@/components/Chat';
+import { validateApiKey } from '@/utils/openai';
 
 export default function Home() {
   const [hasApiKey, setHasApiKey] = useState<boolean | null>(null);
@@ -12,8 +13,11 @@ export default function Home() {
     setHasApiKey(!!apiKey);
   }, []);
 
-  const handleApiKeySubmit = (apiKey: string) => {
-    setHasApiKey(true);
+  const handleApiKeySubmit = async (apiKey: string) => {
+    const isValid = await validateApiKey(apiKey);
+    if (isValid) {
+      setHasApiKey(true);
+    }
   };
 
   if (hasApiKey === null) {

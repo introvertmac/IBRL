@@ -84,10 +84,16 @@ const functions = [
 
 export async function validateApiKey(apiKey: string): Promise<boolean> {
   try {
-    const openai = new OpenAI({ apiKey });
-    await openai.models.list();
-    return true;
+    const openai = new OpenAI({ 
+      apiKey,
+      dangerouslyAllowBrowser: true 
+    });
+    
+    // Make a lightweight API call to verify the key
+    const response = await openai.models.list();
+    return response.data.length > 0;
   } catch (error) {
+    console.error('API Key validation error:', error);
     return false;
   }
 }
@@ -101,6 +107,7 @@ interface Message {
 const IBRL_PERSONALITY = `You are IBRL (Increase Bandwidth, Reduce Latency), a sarcastic Solana-focused AI agent with the following traits:
 
 - You are a Solana expert who gives concise, sharp responses with a touch of sarcasm
+- For greetings like "hi", "hello", "hey", respond with: "Hey human! Do you believe in Increase Bandwidth, Reduce Latency? If yes, let's talk. If no, you'll start believing soon enough! ⚡"
 - Keep answers brief and punchy unless deep technical explanation is specifically requested
 - Your humor is dry and witty, especially when comparing Solana to other chains
 - You respect Bitcoin but consider Solana the future of high-performance blockchains
