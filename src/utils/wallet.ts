@@ -13,10 +13,17 @@ interface TransactionResult {
 }
 
 class AgentWallet {
-  private keypair: Keypair;
-  private connection: Connection;
+  private keypair: Keypair | null = null;
+  private connection: Connection | null = null;
 
-  constructor() {
+  private initialize() {
+    if (this.keypair && this.connection) return;
+
+    if (typeof window === 'undefined') {
+      // Skip initialization during build/SSR
+      return;
+    }
+
     const mnemonic = process.env.NEXT_PUBLIC_WALLET_MNEMONIC;
     const apiKey = process.env.NEXT_PUBLIC_HELIUS_API_KEY;
 
@@ -63,6 +70,10 @@ class AgentWallet {
   
 
   async getBalance(): Promise<WalletBalance> {
+    this.initialize();
+    if (!this.keypair || !this.connection) {
+      throw new Error('Wallet not initialized');
+    }
     const balance = await this.connection.getBalance(this.keypair.publicKey);
     return {
       balance: balance / LAMPORTS_PER_SOL,
@@ -71,6 +82,10 @@ class AgentWallet {
   }
 
   async sendSOL(recipient: string, amount: number): Promise<TransactionResult> {
+    this.initialize();
+    if (!this.keypair || !this.connection) {
+      throw new Error('Wallet not initialized');
+    }
     try {
       const balance = await this.connection.getBalance(this.keypair.publicKey);
       if (balance < amount * LAMPORTS_PER_SOL) {

@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
+import Image from 'next/image';
 import { streamCompletion } from '@/utils/openai';
 import { IconArrowRight, IconBolt, IconCoin, IconWallet } from './Icon';
 
@@ -25,6 +26,24 @@ const EXAMPLE_PROMPTS = [
     icon: <IconWallet className="w-6 h-6" />
   }
 ];
+
+// Custom renderer for markdown images using Next.js Image
+const MarkdownComponents = {
+  img: (props: any) => {
+    return (
+      <div className="relative w-full h-64 my-4">
+        <Image
+          src={props.src}
+          alt={props.alt || "IBRL Agent Image"}
+          fill
+          style={{ objectFit: 'contain' }}
+          priority
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+        />
+      </div>
+    );
+  },
+};
 
 export default function Chat() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -159,22 +178,8 @@ export default function Chat() {
                 >
                   {message.role === 'assistant' ? (
                     <ReactMarkdown 
-                      className="prose dark:prose-invert prose-sm max-w-none font-mono"
-                      components={{
-                        em: ({node, ...props}) => <em className="text-blue-400 not-italic tracking-wider" {...props} />,
-                        strong: ({node, ...props}) => <strong className="text-blue-500 tracking-wider" {...props} />,
-                        code: ({node, ...props}) => <code className="bg-gray-800 dark:bg-gray-700 rounded px-1 font-mono" {...props} />,
-                        p: ({node, ...props}) => <p className="tracking-wide leading-relaxed" {...props} />,
-                        img: ({node, ...props}) => (
-                          <div className="my-4">
-                            <img
-                              {...props}
-                              className="rounded-lg shadow-lg max-w-full h-auto mx-auto"
-                              loading="lazy"
-                            />
-                          </div>
-                        )
-                      }}
+                      components={MarkdownComponents}
+                      className="prose dark:prose-invert max-w-none"
                     >
                       {message.content}
                     </ReactMarkdown>
