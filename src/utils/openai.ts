@@ -3,6 +3,7 @@ import { getSolanaPrice, getTrendingSolanaTokens } from './coingecko';
 import { getSolanaBalance, getTransactionDetails } from './helius';
 import { validateSolanaAddress, validateTransactionHash } from './validation';
 import { agentWallet } from './wallet';
+import { getJitoMEVRewards } from './jito';
 
 
 // Function definitions for OpenAI
@@ -96,6 +97,20 @@ const functions = [
         }
       },
       required: ['recipient', 'image']
+    }
+  },
+  {
+    name: 'getJitoMEVRewards',
+    description: 'Get Jito MEV rewards details for a specific epoch',
+    parameters: {
+      type: 'object',
+      properties: {
+        epoch: {
+          type: 'number',
+          description: 'Solana epoch number to get MEV rewards for'
+        }
+      },
+      required: ['epoch']
     }
   }
 ];
@@ -290,7 +305,7 @@ export async function streamCompletion(
               }
               
               if (!validateTransactionHash(hash)) {
-                onChunk("\nHmm... that doesn't look like a valid transaction hash. Are you sure you copied it correctly? Even Ethereum users get this right sometimes! 😏\n");
+                onChunk("\nHmm... that doesn't look like a valid transaction hash. Are you sure you copied it correctly? Even Ethereum users get this right sometimes! ����\n");
                 break;
               }
               
@@ -461,7 +476,7 @@ export async function streamCompletion(
                 onChunk(`📬 Delivered to: ${mintParams.recipient}\n`);
                 onChunk(`🔗 Transaction ID: ${result.id}\n\n`);
                 onChunk("💫 Your IBRL NFT is now living its best life on the fastest chain in the universe! Remember, while other chains talk about scaling, we're already scaled! 😎⚡\n\n");
-                onChunk("⏳ It might take 30 seconds to deliver the NFT - still faster than getting through an Ethereum gas auction! 😏✨\n");
+                onChunk("�� It might take 30 seconds to deliver the NFT - still faster than getting through an Ethereum gas auction! 😏✨\n");
               } catch (error) {
                 console.error('NFT minting error:', error);
                 if (error instanceof Error && error.message.includes('Invalid')) {
@@ -470,6 +485,39 @@ export async function streamCompletion(
                   onChunk("\n⏰ Whoa there! We're going too fast even for Solana! Let's take a microsecond breather (still faster than an Ethereum block time!) 😏⚡\n");
                 } else {
                   onChunk("\n🔧 Even the fastest chain has its moments! Our NFT minter needs a quick tune-up. But hey, at least we didn't waste $500 on a failed transaction like on Ethereum! 😎⚡\n");
+                }
+              }
+              break;
+
+            case 'getJitoMEVRewards':
+              const { epoch } = JSON.parse(functionArgs);
+              try {
+                const jitoRewards = await getJitoMEVRewards(epoch);
+                
+                onChunk(`\n⚡ Jito MEV Rewards for Epoch ${epoch}:\n\n`);
+                onChunk(`🎯 Total Network MEV: ${jitoRewards.total_network_mev_lamports.toLocaleString()} lamports\n`);
+                onChunk(`💪 Jito Stake Weight: ${jitoRewards.jito_stake_weight_lamports.toLocaleString()} lamports\n`);
+                onChunk(`💎 MEV Reward per Lamport: ${jitoRewards.mev_reward_per_lamport.toFixed(12)} lamports\n\n`);
+                onChunk("While other chains are still figuring out MEV, we're already distributing it at lightspeed! 🚀⚡\n");
+              } catch (error) {
+                console.error('Jito MEV rewards error:', error);
+                
+                if (error instanceof Error) {
+                  switch (error.message) {
+                    case 'INVALID_EPOCH':
+                      onChunk("\n😅 Negative epoch? What is this, Ethereum's gas fee calculator? Let's stick to positive numbers on the fastest chain! ⚡\n");
+                      break;
+                    case 'EPOCH_NOT_FOUND':
+                      onChunk("\n🔍 Hmm, that epoch is playing hide and seek! Either we're too fast and it hasn't happened yet, or it's so old even our lightning-fast nodes have archived it! Try a more recent epoch! ⚡\n");
+                      break;
+                    case 'RATE_LIMIT':
+                      onChunk("\n⚡ Whoa there! We're querying faster than Ethereum can process a single transaction! Let's take a microsecond breather! 😎\n");
+                      break;
+                    default:
+                      onChunk("\n🤔 Even our MEV calculators need a quick power nap sometimes! Don't worry, we'll be back faster than you can say 'Ethereum gas optimization'! ⚡\n");
+                  }
+                } else {
+                  onChunk("\n😅 Looks like our MEV tracker is taking a quick break! Even the fastest chain needs a microsecond of downtime - still faster than an Ethereum block confirmation though! ⚡\n");
                 }
               }
               break;
