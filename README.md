@@ -8,7 +8,7 @@ A sophisticated Solana-focused AI agent with chat interface.
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Next.js](https://img.shields.io/badge/Next.js-14-black)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)](https://www.typescriptlang.org/)
-[![Solana](https://img.shields.io/badge/Solana-1.87-purple)](https://solana.com/)
+[![Solana Web3.js](https://img.shields.io/badge/Solana-Web3.js-purple)](https://solana.com/)
 
 </div>
 
