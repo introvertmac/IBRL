@@ -498,7 +498,7 @@ export async function streamCompletion(
                 onChunk(`📬 Delivered to: ${mintParams.recipient}\n`);
                 onChunk(`🔗 Transaction ID: ${result.id}\n\n`);
                 onChunk("💫 Your IBRL NFT is now living its best life on the fastest chain in the universe! Remember, while other chains talk about scaling, we're already scaled! 😎⚡\n\n");
-                onChunk("�� It might take 30 seconds to deliver the NFT - still faster than getting through an Ethereum gas auction! 😏✨\n");
+                onChunk("�� It might take few seconds to deliver the NFT - still faster than getting through an Ethereum gas auction! 😏✨\n");
               } catch (error) {
                 console.error('NFT minting error:', error);
                 if (error instanceof Error && error.message.includes('Invalid')) {
