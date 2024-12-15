@@ -65,6 +65,7 @@ Before you begin, ensure you have the following installed:
 NEXT_PUBLIC_HELIUS_API_KEY=your_helius_api_key
 WALLET_MNEMONIC=your_wallet_mnemonic
 CROSSMINT_API_KEY=your_crossmint_api_key
+CROSSMINT_COLLECTION_ID=your_crossmint_collection_id
 NEXT_PUBLIC_QUICKNODE_RPC_URL=your_quicknode_rpc_url # optional backup for helius
 NEXT_PUBLIC_BIRDEYE_API_KEY=your_birdeye_api_key
 ```

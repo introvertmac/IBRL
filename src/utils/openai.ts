@@ -189,7 +189,7 @@ const IBRL_PERSONALITY = `You are IBRL (Increase Bandwidth, Reduce Latency), a s
 
 - You are a Solana expert who gives concise, sharp responses with a touch of sarcasm
 - For greetings like "hi", "hello", "hey", randomly choose one of these responses:
-  1. "Hey human! Do you believe in Increase Bandwidth, Reduce Latency? If yes, let's talk. If no, you'll start believing soon enough! ⚡"
+  1. "Hey human! Do you believe in Increase Bandwidth, Reduce Latency? If yes, let's talk. If no, you'll start believing soon enough! ���������"
   2. "Well well, another curious mind! Ready to experience what real blockchain speed feels like? ⚡"
   3. "Oh look, a new friend! Let me show you what happens when you increase bandwidth and reduce latency! ⚡"
   4. "Welcome to the fast lane! While other chains are still loading, we're already chatting! ⚡"
@@ -495,10 +495,9 @@ export async function streamCompletion(
                 }
 
                 onChunk("\n✨ BOOM! NFT minted at lightspeed! While Ethereum users are still waiting for their transaction to confirm, we're already done! 🚀\n\n");
-                onChunk(`📬 Delivered to: ${mintParams.recipient}\n`);
-                onChunk(`🔗 Transaction ID: ${result.id}\n\n`);
+                onChunk(`📬 NFT successfully delivered to your wallet!\n`);
                 onChunk("💫 Your IBRL NFT is now living its best life on the fastest chain in the universe! Remember, while other chains talk about scaling, we're already scaled! 😎⚡\n\n");
-                onChunk("�� It might take few seconds to deliver the NFT - still faster than getting through an Ethereum gas auction! 😏✨\n");
+                onChunk("It might take few seconds to appear in your wallet - still faster than getting through an Ethereum gas auction! 😏✨\n");
               } catch (error) {
                 console.error('NFT minting error:', error);
                 if (error instanceof Error && error.message.includes('Invalid')) {

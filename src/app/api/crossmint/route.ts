@@ -18,8 +18,9 @@ export async function POST(request: Request) {
   try {
     const { recipient, name, image, description } = await request.json() as MintNFTRequest;
     const crossmintApiKey = process.env.CROSSMINT_API_KEY;
+    const crossmintCollectionId = process.env.CROSSMINT_COLLECTION_ID;
 
-    if (!crossmintApiKey) {
+    if (!crossmintApiKey || !crossmintCollectionId) {
       return NextResponse.json(
         { error: 'Server configuration error' },
         { status: 500 }
@@ -41,7 +42,7 @@ export async function POST(request: Request) {
     }
 
     const response = await fetch(
-      'https://crossmint.com/api/2022-06-09/collections/0a056c74-90a1-46f0-960d-584568d9d4cc/nfts',
+      `https://crossmint.com/api/2022-06-09/collections/${crossmintCollectionId}/nfts`,
       {
         method: 'POST',
         headers: {
