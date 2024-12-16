@@ -134,6 +134,11 @@ class AgentWallet {
       throw error;
     }
   }
+
+  public async getAddress(): Promise<string> {
+    const walletInfo = await this.getBalance();
+    return walletInfo.address;
+  }
 }
 
 // Export a singleton instance

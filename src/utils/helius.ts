@@ -70,14 +70,8 @@ export async function getSolanaBalance(address: string): Promise<BalanceResponse
       body: JSON.stringify({
         jsonrpc: '2.0',
         id: 'balance-request',
-        method: 'getAssetsByOwner',
-        params: {
-          ownerAddress: address,
-          displayOptions: {
-            showFungible: true,
-            showNativeBalance: true,
-          },
-        },
+        method: 'getBalance',
+        params: [address],
       }),
     });
 
@@ -91,10 +85,12 @@ export async function getSolanaBalance(address: string): Promise<BalanceResponse
       throw new Error(`Helius API error: ${data.error.message}`);
     }
 
-    const balanceInSOL = Number(data.result?.nativeBalance?.lamports || 0) / 1e9;
+    const balanceInSOL = Number(data.result?.value || 0) / 1e9;
     
     // Get SOL price using existing utility
-    const priceData = await getSolanaPrice();
+    const [priceData] = await Promise.all([
+      getSolanaPrice()
+    ]);
     
     return {
       balance: balanceInSOL,

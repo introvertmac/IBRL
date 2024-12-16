@@ -7,6 +7,11 @@ import { getJitoMEVRewards } from './jito';
 import { getTokenInfo, swapSolToToken } from './jup';
 import { getTrendingTokens } from './birdeye';
 
+const BALANCE_CACHE_DURATION = 10000; // 10 seconds
+const balanceCache = new Map<string, {
+  balance: number;
+  timestamp: number;
+}>();
 
 // Function definitions for OpenAI
 const functions = [
@@ -229,6 +234,23 @@ const IBRL_PERSONALITY = `You are IBRL (Increase Bandwidth, Reduce Latency), a s
   4. "While others are still computing gas costs, we've already processed thousands of transactions! 🚀"
   5. "Imagine paying more in fees than your actual transaction amount! Couldn't be us! 💸"
 `;
+
+async function getCachedBalance(address: string): Promise<number> {
+  const now = Date.now();
+  const cached = balanceCache.get(address);
+  
+  if (cached && (now - cached.timestamp) < BALANCE_CACHE_DURATION) {
+    return cached.balance;
+  }
+  
+  const balance = await agentWallet.getBalance();
+  balanceCache.set(address, {
+    balance: balance.balance,
+    timestamp: now
+  });
+  
+  return balance.balance;
+}
 
 export async function streamCompletion(
   messages: Message[],
@@ -572,11 +594,11 @@ export async function streamCompletion(
               const { amountInSol, outputMint } = JSON.parse(functionArgs);
               
               try {
-                // First check wallet balance
-                const walletInfo = await agentWallet.getBalance();
+                // Use cached balance check
+                const balance = await getCachedBalance(await agentWallet.getAddress());
                 
-                if (walletInfo.balance < amountInSol) {
-                  onChunk("\n😅 Whoa there! Even with Solana's blazing speed, I can't swap what I don't have! My wallet's sitting at ${walletInfo.balance.toFixed(4)} SOL. I'm fast, but I can't create SOL out of thin air! ⚡\n");
+                if (balance < amountInSol) {
+                  onChunk(`\n😅 Whoa there! Even with Solana's blazing speed, I can't swap what I don't have! My wallet's sitting at ${balance.toFixed(4)} SOL. I'm fast, but I can't create SOL out of thin air! ⚡\n`);
                   break;
                 }
 
