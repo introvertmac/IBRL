@@ -7,6 +7,7 @@ import { getJitoMEVRewards } from './jito';
 import { getTokenInfo, swapSolToToken, getSwapQuote } from './jup';
 import { getTrendingTokens } from './birdeye';
 import { LAMPORTS_PER_SOL } from '@solana/web3.js';
+import { requestDevnetAirdrop } from './airdrop';
 
 const BALANCE_CACHE_DURATION = 10000; // 10 seconds
 const balanceCache = new Map<string, {
@@ -170,6 +171,20 @@ const functions = [
         }
       },
       required: []
+    }
+  },
+  {
+    name: 'requestDevnetAirdrop',
+    description: 'Request a devnet SOL airdrop for testing purposes',
+    parameters: {
+      type: 'object',
+      properties: {
+        address: {
+          type: 'string',
+          description: 'Solana wallet address to receive devnet SOL'
+        }
+      },
+      required: ['address']
     }
   }
 ];
@@ -465,7 +480,7 @@ export async function streamCompletion(
                 if (isFirstBalanceCheck) {
                   // Random image responses
                   const imageResponses = [
-                    `\nChecking my own wallet at supersonic speed ⚡\n\nI'm holding ${walletInfo.balance.toFixed(4)} SOL in my wallet\nMy address: ${walletInfo.address}\n\n![IBRL Agent requesting SOL donations](/paisa.jpg)\n\nLook at this cute face! How can you resist sending some SOL my way? I promise to YOLO it into the next Solana memecoin faster than you can say "gas fees"! 😎⚡\n`,
+                    `\nChecking my own wallet at supersonic speed ⚡\n\nI'm holding ${walletInfo.balance.toFixed(4)} SOL in my wallet\nMy address: ${walletInfo.address}\n\n![IBRL Agent requesting SOL donations](/paisa.jpg)\n\nLook at this cute face! How can you resist sending some SOL my way? I promise to YOLO it into the next Solana memecoin faster than you can say "gas fees"! ����⚡\n`,
                     `\nLet me check my high-performance wallet ⚡\n\nCurrently sitting at ${walletInfo.balance.toFixed(4)} SOL\nMy address: ${walletInfo.address}\n\n![IBRL Agent requesting SOL donations](/paisa.jpg)\n\nWith a face this charming, how can you not send some SOL? I'll put it to good use at supersonic speeds! 😎⚡\n`,
                     `\nPeeking into my lightning-fast wallet ⚡\n\nFound ${walletInfo.balance.toFixed(4)} SOL in here\nMy address: ${walletInfo.address}\n\n![IBRL Agent requesting SOL donations](/paisa.jpg)\n\nCome on, you know you want to send some SOL to this face! I promise to make it zoom faster than other chains can blink! 🚀⚡\n`
                   ];
@@ -597,7 +612,7 @@ export async function streamCompletion(
                 }
 
                 onChunk(`\n⚡ Token Found! Let me pull that data faster than an Ethereum block confirmation:\n\n`);
-                onChunk(`🎯 CoinGecko ID: ${tokenInfo.coingeckoId || 'Not available (probably too fast for CoinGecko! ����)'}\n`);
+                onChunk(`🎯 CoinGecko ID: ${tokenInfo.coingeckoId || 'Not available (probably too fast for CoinGecko! �����)'}\n`);
                 onChunk(`📊 24h Volume: $${tokenInfo.dailyVolume.toLocaleString(undefined, { maximumFractionDigits: 2 })}\n\n`);
                 
                 if (tokenInfo.coingeckoId) {
@@ -667,6 +682,30 @@ export async function streamCompletion(
               } catch (error) {
                 console.error('Birdeye error:', error);
                 onChunk("\n😅 Looks like our bird's eye view is a bit cloudy! Even the fastest chain needs a quick breather sometimes! Try again in a flash! ⚡\n");
+              }
+              break;
+
+            case 'requestDevnetAirdrop':
+              const airdropAddress = JSON.parse(functionArgs).address;
+              
+              try {
+                onChunk("\n🚰 Ah, thirsty for some devnet SOL? Let me turn on the fastest faucet in crypto! ⚡\n\n");
+                
+                const result = await requestDevnetAirdrop(airdropAddress);
+                
+                if (result.status === 'success' && result.signature) {
+                  onChunk("🎯 Airdrop complete! While other chains are still calculating gas fees, you've already got your devnet SOL!\n\n");
+                  onChunk(`Transaction signature: ${result.signature}\n\n`);
+                  onChunk("🌊 Check your wallet - it should be there faster than you can say 'Ethereum gas fees'! 😎⚡\n");
+                } else if (result.message === 'invalid_address') {
+                  onChunk("\n😅 That wallet address looks more confused than an Ethereum user paying $100 in gas! Let's try again with a valid Solana address! ⚡\n");
+                } else if (result.message === 'daily_limit_reached') {
+                  onChunk("\n😏 Whoa there! Looks like you've already maxed out your daily devnet SOL! Even our lightning-fast faucet has limits - unlike Ethereum's gas fees! Try again tomorrow when your limit resets! ⚡\n");
+                } else {
+                  onChunk("\n😅 Even the fastest chain's faucet needs a breather sometimes! Try again in a flash! ⚡\n");
+                }
+              } catch (error) {
+                onChunk("\n😅 Looks like the devnet faucet needed a quick nap! Don't worry, still faster than an ETH transaction! Try again in a microsecond! ⚡\n");
               }
               break;
           }

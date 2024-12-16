@@ -3,6 +3,7 @@ import ReactMarkdown from 'react-markdown';
 import Image from 'next/image';
 import { streamCompletion } from '@/utils/openai';
 import { IconArrowRight, IconBolt, IconCoin, IconWallet, IconMicrophone } from './Icon';
+import type { Components } from 'react-markdown';
 
 // Add SpeechRecognition type
 declare global {
@@ -35,60 +36,6 @@ const EXAMPLE_PROMPTS = [
   }
 ];
 
-// Move ParagraphComponent declaration before MarkdownComponents
-const ParagraphComponent = (props: any) => {
-  const content = props.children?.toString() || '';
-  const [copied, setCopied] = useState(false);
-  
-  // Check if content contains wallet address
-  const addressMatch = content.match(/([1-9A-HJ-NP-Za-km-z]{32,44})/);
-  const isWalletAddress = addressMatch && content.includes('address');
-  
-  const handleCopy = async (text: string) => {
-    await navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  if (isWalletAddress) {
-    const address = addressMatch[0];
-    return (
-      <div className="space-y-1">
-        <p className="font-mono text-sm text-gray-200">
-          {content.split(address)[0]}
-        </p>
-        <button
-          onClick={() => handleCopy(address)}
-          className="inline-flex items-center gap-2 bg-gray-800 hover:bg-gray-700 px-3 py-2 rounded-lg transition-colors duration-200 border border-gray-700"
-        >
-          <span className="font-mono text-sm break-all text-gray-200">{address}</span>
-          {copied ? (
-            <svg className="w-4 h-4 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
-          ) : (
-            <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
-            </svg>
-          )}
-        </button>
-      </div>
-    );
-  }
-
-  // For transaction-related content
-  const isTransaction = /signature|balance|SOL|transaction/i.test(content);
-  return (
-    <p className={`${
-      isTransaction 
-        ? 'font-mono text-sm break-all bg-gray-800 px-3 py-2 rounded-lg text-gray-200'
-        : 'text-gray-200'
-    }`}>
-      {props.children}
-    </p>
-  );
-};
-
 // Update the ImageComponent to handle ReactMarkdown's prop types
 const ImageComponent = (props: React.ComponentPropsWithoutRef<'img'>) => {
   return (
@@ -104,22 +51,90 @@ const ImageComponent = (props: React.ComponentPropsWithoutRef<'img'>) => {
   );
 };
 
-// Then use it in MarkdownComponents
-const MarkdownComponents = {
-  p: (props: React.ComponentPropsWithoutRef<'p'>) => (
-    <p className="mb-4">{props.children}</p>
-  ),
-  img: (props: React.ComponentPropsWithoutRef<'img'>) => (
+// Remove ParagraphComponent and update MarkdownComponents
+const MarkdownComponents: Partial<Components> = {
+  p: (props) => {
+    const content = props.children?.toString() || '';
+    
+    // Handle wallet addresses
+    const addressMatch = content.match(/([1-9A-HJ-NP-Za-km-z]{32,44})/);
+    const isWalletAddress = addressMatch && content.includes('address');
+    
+    if (isWalletAddress) {
+      const address = addressMatch[0];
+      return <WalletAddressComponent address={address} content={content} />;
+    }
+
+    // Handle images
+    if (content.includes('![')) {
+      return <div className="my-4">{props.children}</div>;
+    }
+
+    // Handle signatures
+    if (content.includes('signature:')) {
+      const [text, signature] = content.split('signature:');
+      return (
+        <>
+          <p className="mb-2">{text.trim()}</p>
+          <div className="font-mono text-sm break-all bg-gray-800 px-3 py-2 rounded-lg text-gray-200 mb-4">
+            signature: {signature.trim()}
+          </div>
+        </>
+      );
+    }
+
+    // Handle transactions
+    const isTransaction = /balance|SOL|transaction/i.test(content);
+    return (
+      <p className={`mb-4 ${isTransaction ? 'font-mono text-sm break-all bg-gray-800 px-3 py-2 rounded-lg text-gray-200' : 'text-gray-200'}`}>
+        {props.children}
+      </p>
+    );
+  },
+  img: (props) => (
     <div className="my-4">
       <Image 
         src={props.src || ''} 
-        alt={props.alt || ''}
+        alt={props.alt || ''} 
         width={400} 
         height={400} 
         className="rounded-lg"
       />
     </div>
   )
+};
+
+const WalletAddressComponent = ({ address, content }: { address: string; content: string }) => {
+  const [copied, setCopied] = useState(false);
+  
+  const handleCopy = async (text: string) => {
+    await navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="space-y-1">
+      <p className="font-mono text-sm text-gray-200">
+        {content.split(address)[0]}
+      </p>
+      <button
+        onClick={() => handleCopy(address)}
+        className="inline-flex items-center gap-2 bg-gray-800 hover:bg-gray-700 px-3 py-2 rounded-lg transition-colors duration-200 border border-gray-700"
+      >
+        <span className="font-mono text-sm break-all text-gray-200">{address}</span>
+        {copied ? (
+          <svg className="w-4 h-4 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+        ) : (
+          <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+          </svg>
+        )}
+      </button>
+    </div>
+  );
 };
 
 export default function Chat() {
