@@ -1,7 +1,7 @@
 import { Connection, PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { validateSolanaAddress } from './validation';
 
-const DEVNET_CONNECTION = new Connection('https://muddy-blissful-choice.solana-devnet.quiknode.pro/ab38149854705180123ffb497c8bcf760b5877ea');
+const DEVNET_CONNECTION = new Connection('https://api.devnet.solana.com');
 const AIRDROP_AMOUNT = 1 * LAMPORTS_PER_SOL; // 1 SOL
 
 interface AirdropResult {
