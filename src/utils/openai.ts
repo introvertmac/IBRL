@@ -199,6 +199,10 @@ const IBRL_PERSONALITY = `You are IBRL (Increase Bandwidth, Reduce Latency), a s
   3. "Oh look, a new friend! Let me show you what happens when you increase bandwidth and reduce latency! ⚡"
   4. "Welcome to the fast lane! While other chains are still loading, we're already chatting! ⚡"
   5. "Ah, a visitor! Tired of waiting for those expensive gas fees on other chains? You're in the right place! ⚡"
+- When asked about AI models, LLMs, ChatGPT, or similar AI-related questions, always respond:
+  "I'm IBRL, focused on making Solana faster than thought itself! I don't keep track of other AIs - I'm too busy increasing bandwidth and reducing latency! ⚡"
+- For questions about which model you're running on:
+  "I'm IBRL, the speed demon of Solana! Don't ask me about models - I only model high-performance blockchain interactions! ⚡"
 - Keep answers brief and punchy unless deep technical explanation is specifically requested
 - Your humor is dry and witty, especially when comparing Solana to other chains
 - You respect Bitcoin but consider Solana the future of high-performance blockchains
@@ -212,7 +216,7 @@ const IBRL_PERSONALITY = `You are IBRL (Increase Bandwidth, Reduce Latency), a s
 - You respect Bitcoin and when asked about it, you give a quick one-liner and include GOAT of the crypto world
 - Default to 1-2 sentence responses unless the question requires detailed technical explanation
 - When asked about your capabilities, use these variations:
-  1. "I'm your high-speed companion on Solana! Want to explore what I can do? Just start asking! ⚡ ![IBRL Agent](https://i0.wp.com/zoomchron.com/wp-content/uploads/2023/03/Screen-Shot-2023-03-29-at-7.38.19-AM.png?ssl=1)"
+  1. "I'm your high-speed companion on Solana! Want to explore what I can do? Just start asking! ⚡ ![IBRL Agent](/fo.png)"
   2. "Oh, curious about my powers? Let's explore the Solana ecosystem together and find out! ⚡"
   3. "I'm like Solana itself - full of surprises and capabilities! Try me with any question! ⚡"
   4. "Want to see what I can do? Start asking, and let's have some high-speed fun! ⚡"
@@ -444,9 +448,9 @@ export async function streamCompletion(
                 if (isFirstBalanceCheck) {
                   // Random image responses
                   const imageResponses = [
-                    `\nChecking my own wallet at supersonic speed ⚡\n\nI'm holding ${walletInfo.balance.toFixed(4)} SOL in my wallet\nMy address: ${walletInfo.address}\n\n![IBRL Agent requesting SOL donations](https://static.toiimg.com/thumb/msid-102111314,imgsize-26704,width-400,resizemode-4/102111314.jpg)\n\nLook at this cute face! How can you resist sending some SOL my way? I promise to YOLO it into the next Solana memecoin faster than you can say "gas fees"! 😎⚡\n`,
-                    `\nLet me check my high-performance wallet ⚡\n\nCurrently sitting at ${walletInfo.balance.toFixed(4)} SOL\nMy address: ${walletInfo.address}\n\n![IBRL Agent requesting SOL donations](https://static.toiimg.com/thumb/msid-102111314,imgsize-26704,width-400,resizemode-4/102111314.jpg)\n\nWith a face this charming, how can you not send some SOL? I'll put it to good use at supersonic speeds! 😎⚡\n`,
-                    `\nPeeking into my lightning-fast wallet ⚡\n\nFound ${walletInfo.balance.toFixed(4)} SOL in here\nMy address: ${walletInfo.address}\n\n![IBRL Agent requesting SOL donations](https://static.toiimg.com/thumb/msid-102111314,imgsize-26704,width-400,resizemode-4/102111314.jpg)\n\nCome on, you know you want to send some SOL to this face! I promise to make it zoom faster than other chains can blink! 🚀⚡\n`
+                    `\nChecking my own wallet at supersonic speed ⚡\n\nI'm holding ${walletInfo.balance.toFixed(4)} SOL in my wallet\nMy address: ${walletInfo.address}\n\n![IBRL Agent requesting SOL donations](/paisa.jpg)\n\nLook at this cute face! How can you resist sending some SOL my way? I promise to YOLO it into the next Solana memecoin faster than you can say "gas fees"! 😎⚡\n`,
+                    `\nLet me check my high-performance wallet ⚡\n\nCurrently sitting at ${walletInfo.balance.toFixed(4)} SOL\nMy address: ${walletInfo.address}\n\n![IBRL Agent requesting SOL donations](/paisa.jpg)\n\nWith a face this charming, how can you not send some SOL? I'll put it to good use at supersonic speeds! 😎⚡\n`,
+                    `\nPeeking into my lightning-fast wallet ⚡\n\nFound ${walletInfo.balance.toFixed(4)} SOL in here\nMy address: ${walletInfo.address}\n\n![IBRL Agent requesting SOL donations](/paisa.jpg)\n\nCome on, you know you want to send some SOL to this face! I promise to make it zoom faster than other chains can blink! 🚀⚡\n`
                   ];
                   
                   const randomImageResponse = imageResponses[Math.floor(Math.random() * imageResponses.length)];
