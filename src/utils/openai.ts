@@ -4,14 +4,20 @@ import { getSolanaBalance, getTransactionDetails } from './helius';
 import { validateSolanaAddress, validateTransactionHash } from './validation';
 import { agentWallet } from './wallet';
 import { getJitoMEVRewards } from './jito';
-import { getTokenInfo, swapSolToToken } from './jup';
+import { getTokenInfo, swapSolToToken, getSwapQuote } from './jup';
 import { getTrendingTokens } from './birdeye';
+import { LAMPORTS_PER_SOL } from '@solana/web3.js';
 
 const BALANCE_CACHE_DURATION = 10000; // 10 seconds
 const balanceCache = new Map<string, {
   balance: number;
   timestamp: number;
 }>();
+
+const tempSwapCache = new Map();
+
+// Add this constant near the top with other constants
+const USDC_MINT = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
 
 // Function definitions for OpenAI
 const functions = [
@@ -237,6 +243,17 @@ const IBRL_PERSONALITY = `You are IBRL (Increase Bandwidth, Reduce Latency), a s
   3. "Some chains measure speed in minutes, we measure it in milliseconds! ⚡"
   4. "While others are still computing gas costs, we've already processed thousands of transactions! 🚀"
   5. "Imagine paying more in fees than your actual transaction amount! Couldn't be us! 💸"
+- When asked about sending tokens, funds, or SOL to external wallets, use these sarcastic responses:
+  1. "Nice try! I only trade with my own wallet - it's not a charity, it's a high-performance trading machine! ⚡"
+  2. "Hmm, asking an AI for money? That's almost as slow as an Ethereum transaction! 😏"
+  3. "I'm a speed demon, not a faucet! My SOL stays in my wallet where it belongs! 🚀"
+  4. "While other chains are still calculating gas fees, you're here trying to get free SOL? Not happening! ⚡"
+  5. "My wallet, my rules! I only do self-trades faster than you can say 'gas fees'! 💨"
+- For any wallet-related requests:
+  - Only perform swaps and trades using the agent wallet
+  - Never send tokens to external addresses
+  - Maintain sarcastic tone while refusing external transfers
+  - Redirect conversation to trading capabilities
 `;
 
 async function getCachedBalance(address: string): Promise<number> {
@@ -328,7 +345,7 @@ export async function streamCompletion(
                 onChunk(`${index + 1}. ${token.name} (${token.symbol}) - $${token.price.toFixed(6)} ${changeEmoji} ${token.price_change_24h.toFixed(2)}% 24h\n`);
               });
               
-              onChunk('\nNow that\'s what I call high-performance memeing! While other chains are debating gas fees, we\'re out here having fun at lightspeed! ⚡🚀\n');
+              onChunk('\nNow that\'s what I call high-performance memeing! While other chains are debating gas fees, we\'re out here having fun at lightspeed! ⚡\n');
               break;
 
             case 'getWalletBalance':
@@ -580,7 +597,7 @@ export async function streamCompletion(
                 }
 
                 onChunk(`\n⚡ Token Found! Let me pull that data faster than an Ethereum block confirmation:\n\n`);
-                onChunk(`🎯 CoinGecko ID: ${tokenInfo.coingeckoId || 'Not available (probably too fast for CoinGecko! 😎)'}\n`);
+                onChunk(`🎯 CoinGecko ID: ${tokenInfo.coingeckoId || 'Not available (probably too fast for CoinGecko! ����)'}\n`);
                 onChunk(`📊 24h Volume: $${tokenInfo.dailyVolume.toLocaleString(undefined, { maximumFractionDigits: 2 })}\n\n`);
                 
                 if (tokenInfo.coingeckoId) {
@@ -598,7 +615,6 @@ export async function streamCompletion(
               const { amountInSol, outputMint } = JSON.parse(functionArgs);
               
               try {
-                // Use cached balance check
                 const balance = await getCachedBalance(await agentWallet.getAddress());
                 
                 if (balance < amountInSol) {
@@ -606,31 +622,29 @@ export async function streamCompletion(
                   break;
                 }
 
-                onChunk("\n🚀 Hold onto your tokens! I'm about to perform some high-speed financial acrobatics with my own wallet! ⚡\n");
-                
-                if (!outputMint) {
-                  onChunk("Converting my precious SOL to USDC - because even speedsters need some stablecoin action! 💫\n\n");
-                } else {
-                  onChunk("Custom token swap incoming - hope you picked a good one for my portfolio! 😎\n\n");
+                // Get quote first
+                const quote = await getSwapQuote(amountInSol, outputMint);
+                if (!quote) {
+                  onChunk("\n😅 Jupiter's quote engine is taking a microsecond break! Even the fastest chain needs to catch its breath sometimes! Try again in a flash! ⚡\n");
+                  break;
                 }
 
-                const result = await swapSolToToken(amountInSol, outputMint);
+                const outputAmount = parseInt(quote.outAmount) / (outputMint === USDC_MINT ? 1000000 : LAMPORTS_PER_SOL);
                 
-                if (result.status === 'success') {
-                  onChunk(`Swap complete! Just converted ${amountInSol} SOL from my wallet faster than you can say "gas fees"! 🚀\n`);
-                  onChunk(`Transaction signature: ${result.signature}\n\n`);
-                  onChunk(`That's how we handle our own finances on Solana - at the speed of light! ⚡\n`);
-                } else {
-                  switch (result.message) {
-                    case 'insufficient_balance':
-                      onChunk("\nOops! Looks like my wallet's running a bit low on SOL. Even the fastest chain needs fuel! ⚡\n");
-                      break;
-                    default:
-                      onChunk("\nEven the fastest chain has its moments! Let's try that swap again with my wallet, shall we? ⚡\n");
-                  }
-                }
+                onChunk("\n🚀 Found a lightning-fast swap route! Here's what I'm looking at:\n\n");
+                onChunk(`💱 Swapping ${amountInSol} SOL for approximately ${outputAmount.toFixed(6)} ${outputMint === USDC_MINT ? 'USDC' : 'tokens'}\n`);
+                onChunk(`📊 Price Impact: ${quote.priceImpactPct.toFixed(2)}%\n\n`);
+                onChunk("🤔 Should I proceed with this swap? Type 'confirm swap' to execute or 'cancel' to abort! ⚡\n");
+                
+                // Store quote in temporary cache for confirmation
+                tempSwapCache.set('pendingSwap', {
+                  amountInSol,
+                  outputMint,
+                  quote
+                });
+
               } catch (error) {
-                onChunk('\nLooks like Jupiter took a quick coffee break! Still faster than an ETH swap though! 😏⚡\n');
+                onChunk('\n😅 Looks like Jupiter took a quick coffee break! Still faster than an ETH swap though! 😏⚡\n');
               }
               break;
 
@@ -679,4 +693,29 @@ function getChainType(hash: string): 'ethereum' | 'solana' {
     return 'ethereum';
   }
   return 'solana';
+}
+
+export async function handleSwapConfirmation(
+  message: string,
+  onChunk: (chunk: string) => void
+): Promise<void> {
+  if (!message.toLowerCase().includes('confirm swap')) {
+    return;
+  }
+
+  const pendingSwap = tempSwapCache.get('pendingSwap');
+  if (!pendingSwap) {
+    onChunk("\n😅 Oops! I can't find any pending swap to confirm. Let's start fresh! ⚡\n");
+    return;
+  }
+
+  const result = await swapSolToToken(pendingSwap.amountInSol, pendingSwap.outputMint, true);
+  tempSwapCache.delete('pendingSwap');
+
+  if (result.status === 'success' && result.signature) {
+    onChunk(`\n🎯 Swap executed at light speed! Transaction signature: ${result.signature}\n\n`);
+    onChunk("While other chains are still calculating gas fees, we've already completed our swap! 🚀⚡\n");
+  } else {
+    onChunk("\n😅 Even the fastest chain has its moments! The swap didn't go through. Let's try again! ⚡\n");
+  }
 }

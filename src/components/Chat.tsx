@@ -89,48 +89,37 @@ const ParagraphComponent = (props: any) => {
   );
 };
 
+// Update the ImageComponent to handle ReactMarkdown's prop types
+const ImageComponent = (props: React.ComponentPropsWithoutRef<'img'>) => {
+  return (
+    <div className="my-4">
+      <Image 
+        src={props.src || ''} 
+        alt={props.alt || ''}
+        width={400} 
+        height={400} 
+        className="rounded-lg"
+      />
+    </div>
+  );
+};
+
 // Then use it in MarkdownComponents
 const MarkdownComponents = {
-  img: (props: any) => {
-    return (
-      <div className="relative w-full max-w-2xl mx-auto h-[400px] rounded-lg overflow-hidden">
-        <Image
-          src={props.src}
-          alt={props.alt || "IBRL Agent Image"}
-          fill
-          style={{ objectFit: 'contain' }}
-          priority
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-          className="rounded-lg"
-          onError={(e: any) => {
-            e.target.style.display = 'none';
-          }}
-        />
-      </div>
-    );
-  },
-  p: ParagraphComponent,
-  // Add custom code block handling
-  code: (props: any) => {
-    return (
-      <code className="bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded font-mono text-sm">
-        {props.children}
-      </code>
-    );
-  },
-  // Add custom link handling
-  a: (props: any) => {
-    return (
-      <a 
-        href={props.href}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-blue-400 hover:text-blue-500 underline"
-      >
-        {props.children}
-      </a>
-    );
-  }
+  p: (props: React.ComponentPropsWithoutRef<'p'>) => (
+    <p className="mb-4">{props.children}</p>
+  ),
+  img: (props: React.ComponentPropsWithoutRef<'img'>) => (
+    <div className="my-4">
+      <Image 
+        src={props.src || ''} 
+        alt={props.alt || ''}
+        width={400} 
+        height={400} 
+        className="rounded-lg"
+      />
+    </div>
+  )
 };
 
 export default function Chat() {
@@ -303,7 +292,7 @@ export default function Chat() {
                   {message.role === 'assistant' ? (
                     <ReactMarkdown 
                       components={MarkdownComponents}
-                      className="prose dark:prose-invert max-w-none break-words"
+                      className="prose dark:prose-invert max-w-none"
                     >
                       {message.content}
                     </ReactMarkdown>

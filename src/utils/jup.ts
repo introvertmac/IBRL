@@ -9,12 +9,26 @@ interface JupiterTokenInfo {
     coingeckoId: string;
   };
   daily_volume: number;
+  symbol: string;
+  name: string;
+  price: number;
+}
+
+interface SwapQuote {
+  inputMint: string;
+  outputMint: string;
+  inAmount: string;
+  outAmount: string;
+  priceImpactPct: number;
+  marketInfos: any[];
+  swapMode: string;
 }
 
 interface SwapResult {
-  status: 'success' | 'error';
+  status: 'success' | 'error' | 'pending_confirmation';
   signature?: string;
   message?: string;
+  quote?: SwapQuote;
 }
 
 export async function getTokenInfo(mintAddress: string): Promise<{ coingeckoId: string; dailyVolume: number } | null> {
@@ -40,30 +54,54 @@ export async function getTokenInfo(mintAddress: string): Promise<{ coingeckoId: 
   }
 }
 
+export async function getSwapQuote(
+  amountInSol: number,
+  outputMint: string = USDC_MINT
+): Promise<SwapQuote | null> {
+  try {
+    const amountInLamports = amountInSol * LAMPORTS_PER_SOL;
+    const response = await fetch(
+      `https://quote-api.jup.ag/v6/quote?inputMint=${SOL_MINT}&outputMint=${outputMint}&amount=${amountInLamports}&slippageBps=50`
+    );
+    
+    if (!response.ok) return null;
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error getting swap quote:', error);
+    return null;
+  }
+}
+
 export async function swapSolToToken(
   amountInSol: number,
   outputMint: string = USDC_MINT,
-  slippageBps: number = 50
+  userConfirmed: boolean = false
 ): Promise<SwapResult> {
   try {
-    const connection = await agentWallet.getActiveConnection();
-    const walletInfo = await agentWallet.getBalance();
-    
-    // Check if we have enough balance
-    if (walletInfo.balance < amountInSol) {
+    if (!userConfirmed) {
       return {
-        status: 'error',
-        message: 'insufficient_balance'
+        status: 'pending_confirmation',
+        message: 'waiting_for_confirmation'
       };
     }
 
-    // Convert SOL to lamports
-    const amountInLamports = amountInSol * LAMPORTS_PER_SOL;
+    const quote = await getSwapQuote(amountInSol, outputMint);
+    if (!quote) {
+      return {
+        status: 'error',
+        message: 'quote_failed'
+      };
+    }
 
-    // Get quote
-    const quoteResponse = await (
-      await fetch(`https://quote-api.jup.ag/v6/quote?inputMint=${SOL_MINT}&outputMint=${outputMint}&amount=${amountInLamports}&slippageBps=${slippageBps}`)
-    ).json();
+    const walletInfo = await agentWallet.getBalance();
+    if (walletInfo.balance < amountInSol) {
+      return {
+        status: 'error',
+        message: 'insufficient_balance',
+        quote
+      };
+    }
 
     // Get swap transaction
     const { swapTransaction } = await (
@@ -73,23 +111,21 @@ export async function swapSolToToken(
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          quoteResponse,
+          quoteResponse: quote,
           userPublicKey: walletInfo.address,
           wrapAndUnwrapSol: true
         })
       })
     ).json();
 
-    // Deserialize and sign transaction
     const swapTransactionBuf = Buffer.from(swapTransaction, 'base64');
     const transaction = VersionedTransaction.deserialize(swapTransactionBuf);
-    
-    // Sign using our wallet
     const signature = await agentWallet.signAndSendTransaction(transaction);
 
     return {
       status: 'success',
-      signature
+      signature,
+      quote
     };
   } catch (error) {
     console.error('Swap error:', error);
