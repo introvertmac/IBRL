@@ -114,17 +114,20 @@ class AgentWallet {
   async signAndSendTransaction(transaction: VersionedTransaction): Promise<string> {
     try {
       const connection = await this.getActiveConnection();
+      const serializedTransaction = Buffer.from(transaction.serialize()).toString('base64');
+      
       const response = await fetch('/api/wallet/sign', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          transaction: transaction.serialize(),
+          transaction: serializedTransaction,
           rpcUrl: this.isUsingFallback ? 'helius' : 'quicknode' 
         }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to sign and send transaction');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to sign and send transaction');
       }
 
       const result = await response.json();

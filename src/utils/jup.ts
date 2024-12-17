@@ -35,7 +35,7 @@ interface SwapQuote {
   outputMint: string;
   inAmount: string;
   outAmount: string;
-  priceImpactPct: number;
+  priceImpactPct: string;
   marketInfos: any[];
   swapMode: string;
   otherAmountThreshold: string;
@@ -79,13 +79,35 @@ export async function getSwapQuote(
   outputMint: string = USDC_MINT
 ): Promise<SwapQuote | null> {
   try {
-    const amountInLamports = amountInSol * LAMPORTS_PER_SOL;
-    const response = await fetch(
-      `https://quote-api.jup.ag/v6/quote?inputMint=${SOL_MINT}&outputMint=${outputMint}&amount=${amountInLamports}&slippageBps=50`
-    );
+    const amountInLamports = Math.round(amountInSol * LAMPORTS_PER_SOL);
     
-    if (!response.ok) return null;
-    const data = await response.json();
+    console.log('Requesting quote:', {
+      inputMint: SOL_MINT,
+      outputMint,
+      amountInLamports,
+      amountInSol
+    });
+
+    const quoteUrl = `https://quote-api.jup.ag/v6/quote?inputMint=${SOL_MINT}&outputMint=${outputMint}&amount=${amountInLamports}&slippageBps=50`;
+    console.log('Quote URL:', quoteUrl);
+
+    const response = await fetch(quoteUrl);
+    const responseText = await response.text();
+    console.log('Raw response:', responseText);
+    
+    if (!response.ok) {
+      console.error('Quote API error:', responseText);
+      return null;
+    }
+
+    const data = JSON.parse(responseText);
+    console.log('Parsed quote response:', data);
+    
+    if (!data || !data.outAmount) {
+      console.error('Invalid quote response:', data);
+      return null;
+    }
+
     return data;
   } catch (error) {
     console.error('Error getting swap quote:', error);
@@ -95,63 +117,55 @@ export async function getSwapQuote(
 
 export async function swapSolToToken(
   amountInSol: number,
-  outputMint: string = USDC_MINT,
-  userConfirmed: boolean = false
+  outputMint: string = USDC_MINT
 ): Promise<SwapResult> {
   try {
-    if (!userConfirmed) {
-      return {
-        status: 'pending_confirmation',
-        message: 'waiting_for_confirmation'
-      };
-    }
-
     const quote = await getSwapQuote(amountInSol, outputMint);
     if (!quote) {
-      return {
-        status: 'error',
-        message: 'quote_failed'
-      };
+      return { status: 'error', message: 'quote_failed' };
     }
+
+    const outputAmount = parseInt(quote.outAmount) / (outputMint === USDC_MINT ? 1000000 : LAMPORTS_PER_SOL);
+
+    console.log('Swap Quote:', {
+      inputAmount: `${amountInSol} SOL`,
+      outputAmount: `${outputAmount.toFixed(6)} ${outputMint === USDC_MINT ? 'USDC' : 'SOL'}`,
+      priceImpact: `${parseFloat(quote.priceImpactPct).toFixed(2)}%`,
+      route: quote.routePlan.map((r) => r.swapInfo.label).join(' → '),
+    });
 
     const walletInfo = await agentWallet.getBalance();
-    if (walletInfo.balance < amountInSol) {
-      return {
-        status: 'error',
-        message: 'insufficient_balance',
-        quote
-      };
+    if (!walletInfo || walletInfo.balance < amountInSol) {
+      return { status: 'error', message: 'insufficient_balance', quote };
     }
 
-    // Get swap transaction
-    const { swapTransaction } = await (
-      await fetch('https://quote-api.jup.ag/v6/swap', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          quoteResponse: quote,
-          userPublicKey: walletInfo.address,
-          wrapAndUnwrapSol: true
-        })
-      })
-    ).json();
+    const response = await fetch('https://quote-api.jup.ag/v6/swap', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        quoteResponse: quote,
+        userPublicKey: walletInfo.address,
+        wrapUnwrapSOL: true,
+        computeUnitPriceMicroLamports: 'auto',
+        asLegacyTransaction: false,
+      }),
+    });
 
-    const swapTransactionBuf = Buffer.from(swapTransaction, 'base64');
-    const transaction = VersionedTransaction.deserialize(swapTransactionBuf);
+    if (!response.ok) {
+      throw new Error(`Swap request failed: ${response.statusText}`);
+    }
+
+    const { swapTransaction } = await response.json();
+
+    // Ensure swapTransaction is a base64 string and decode it
+    const transactionBuffer = Buffer.from(swapTransaction, 'base64');
+    const transaction = VersionedTransaction.deserialize(transactionBuffer);
+
     const signature = await agentWallet.signAndSendTransaction(transaction);
 
-    return {
-      status: 'success',
-      signature,
-      quote
-    };
+    return { status: 'success', signature, quote };
   } catch (error) {
     console.error('Swap error:', error);
-    return {
-      status: 'error',
-      message: 'transaction_failed'
-    };
+    return { status: 'error', message: error instanceof Error ? error.message : 'transaction_failed' };
   }
 }
