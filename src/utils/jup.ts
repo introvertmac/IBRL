@@ -14,6 +14,22 @@ interface JupiterTokenInfo {
   price: number;
 }
 
+interface SwapInfo {
+  ammKey: string;
+  label: string;
+  inputMint: string;
+  outputMint: string;
+  inAmount: string;
+  outAmount: string;
+  feeAmount: string;
+  feeMint: string;
+}
+
+interface RoutePlan {
+  swapInfo: SwapInfo;
+  percent: number;
+}
+
 interface SwapQuote {
   inputMint: string;
   outputMint: string;
@@ -22,6 +38,10 @@ interface SwapQuote {
   priceImpactPct: number;
   marketInfos: any[];
   swapMode: string;
+  otherAmountThreshold: string;
+  routePlan: RoutePlan[];
+  contextSlot?: number;
+  timeTaken?: number;
 }
 
 interface SwapResult {

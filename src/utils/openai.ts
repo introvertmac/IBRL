@@ -450,7 +450,7 @@ export async function streamCompletion(
                 onChunk('\n');
                 
                 if (txDetails.status === 'Success') {
-                  onChunk("Transaction confirmed and secured on-chain in milliseconds! That's the Solana way ������\n");
+                  onChunk("Transaction confirmed and secured on-chain in milliseconds! That's the Solana way ����\n");
                 } else {
                   onChunk("Transaction failed, but hey, at least you didn't waste $50 on gas fees! 😎\n");
                 }
@@ -629,38 +629,69 @@ export async function streamCompletion(
               break;
 
             case 'swapSol':
-              const { amountInSol, outputMint } = JSON.parse(functionArgs);
+              const { amountInSol, outputMint = USDC_MINT } = JSON.parse(functionArgs);
               
               try {
+                console.log('Starting swap flow with:', { amountInSol, outputMint });
+                
                 const balance = await getCachedBalance(await agentWallet.getAddress());
                 
                 if (balance < amountInSol) {
                   onChunk(`\n😅 Whoa there! Even with Solana's blazing speed, I can't swap what I don't have! My wallet's sitting at ${balance.toFixed(4)} SOL. I'm fast, but I can't create SOL out of thin air! ⚡\n`);
-                  break;
+                  return;
                 }
 
-                // Get quote first
+                console.log('Getting quote for:', { amountInSol, outputMint });
+                
                 const quote = await getSwapQuote(amountInSol, outputMint);
                 if (!quote) {
-                  onChunk("\n���� Jupiter's quote engine is taking a microsecond break! Even the fastest chain needs to catch its breath sometimes! Try again in a flash! ⚡\n");
-                  break;
+                  onChunk("\n🔄 Jupiter's quote engine is taking a microsecond break! Even the fastest chain needs to catch its breath sometimes! Try again in a flash! ⚡\n");
+                  return;
                 }
 
-                const outputAmount = parseInt(quote.outAmount) / (outputMint === USDC_MINT ? 1000000 : LAMPORTS_PER_SOL);
+                console.log('Received quote:', quote);
+
+                // Get token info after successful quote
+                let tokenName = 'USDC';
+                try {
+                  if (outputMint !== USDC_MINT) {
+                    const tokenInfo = await getTokenInfo(outputMint);
+                    if (tokenInfo) {
+                      tokenName = tokenInfo.coingeckoId || 'Unknown Token';
+                    }
+                  }
+                } catch (tokenError) {
+                  console.error('Token info error:', tokenError);
+                  // Continue with default token name if token info fails
+                }
+
+                const outputDecimals = outputMint === USDC_MINT ? 1000000 : LAMPORTS_PER_SOL;
+                const outputAmount = parseInt(quote.outAmount) / outputDecimals;
                 
                 onChunk("\n🚀 Found a lightning-fast swap route! Here's what I'm looking at:\n\n");
-                onChunk(`💱 Swapping ${amountInSol} SOL for approximately ${outputAmount.toFixed(6)} ${outputMint === USDC_MINT ? 'USDC' : 'tokens'}\n`);
+                onChunk(`💱 Swapping ${amountInSol} SOL for approximately ${outputAmount.toFixed(6)} ${tokenName}\n`);
                 onChunk(`📊 Price Impact: ${quote.priceImpactPct.toFixed(2)}%\n\n`);
+                
+                if (quote.routePlan && quote.routePlan.length > 0) {
+                  onChunk("🛣️ Route: ");
+                  quote.routePlan.forEach((step, index) => {
+                    onChunk(`${step.swapInfo.label}${index < quote.routePlan.length - 1 ? " → " : ""}`);
+                  });
+                  onChunk("\n\n");
+                }
+                
                 onChunk("🤔 Should I proceed with this swap? Type 'confirm swap' to execute or 'cancel' to abort! ⚡\n");
                 
-                // Store quote in temporary cache for confirmation
                 tempSwapCache.set('pendingSwap', {
                   amountInSol,
                   outputMint,
-                  quote
+                  quote,
+                  tokenName
                 });
+                return;
 
               } catch (error) {
+                console.error('Swap quote error:', error);
                 onChunk('\n😅 Looks like Jupiter took a quick coffee break! Still faster than an ETH swap though! 😏⚡\n');
               }
               break;
@@ -754,7 +785,9 @@ export async function handleSwapConfirmation(
   tempSwapCache.delete('pendingSwap');
 
   if (result.status === 'success' && result.signature) {
-    onChunk(`\n🎯 Swap executed at light speed! Transaction signature: ${result.signature}\n\n`);
+    const outputAmount = parseInt(result.quote!.outAmount) / (pendingSwap.outputMint === USDC_MINT ? 1000000 : LAMPORTS_PER_SOL);
+    onChunk(`\n🎯 Successfully swapped ${pendingSwap.amountInSol} SOL for ${outputAmount.toFixed(6)} ${pendingSwap.tokenName}!\n`);
+    onChunk(`Transaction signature: ${result.signature}\n\n`);
     onChunk("While other chains are still calculating gas fees, we've already completed our swap! 🚀⚡\n");
   } else {
     onChunk("\n😅 Even the fastest chain has its moments! The swap didn't go through. Let's try again! ⚡\n");
