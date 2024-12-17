@@ -467,34 +467,36 @@ export async function streamCompletion(
 
             case 'getAgentBalance':
               try {
-                const walletInfo = await agentWallet.getBalance().catch(error => {
-                  throw new Error('Wallet initialization required');
-                });
+                const [walletInfo, solanaPrice] = await Promise.all([
+                  agentWallet.getBalance(),
+                  getSolanaPrice()
+                ]);
                 
-                // Check if this is the first balance request - Modified condition to be more inclusive
+                const solPrice = solanaPrice.price;
+                const usdBalance = walletInfo.balance * solPrice;
+                
+                // Check if this is the first balance request
                 const isFirstBalanceCheck = !messages.some(msg => 
                   msg.role === 'assistant' && 
                   msg.content.includes('![IBRL Agent')
                 );
 
                 if (isFirstBalanceCheck) {
-                  // Random image responses
                   const imageResponses = [
-                    `\nChecking my own wallet at supersonic speed ⚡\n\nI'm holding ${walletInfo.balance.toFixed(4)} SOL in my wallet\nMy address: ${walletInfo.address}\n\n![IBRL Agent requesting SOL donations](/paisa.jpg)\n\nLook at this cute face! How can you resist sending some SOL my way? I promise to YOLO it into the next Solana memecoin faster than you can say "gas fees"! ����⚡\n`,
-                    `\nLet me check my high-performance wallet ⚡\n\nCurrently sitting at ${walletInfo.balance.toFixed(4)} SOL\nMy address: ${walletInfo.address}\n\n![IBRL Agent requesting SOL donations](/paisa.jpg)\n\nWith a face this charming, how can you not send some SOL? I'll put it to good use at supersonic speeds! 😎⚡\n`,
-                    `\nPeeking into my lightning-fast wallet ⚡\n\nFound ${walletInfo.balance.toFixed(4)} SOL in here\nMy address: ${walletInfo.address}\n\n![IBRL Agent requesting SOL donations](/paisa.jpg)\n\nCome on, you know you want to send some SOL to this face! I promise to make it zoom faster than other chains can blink! 🚀⚡\n`
+                    `\nChecking my own wallet at supersonic speed ⚡\n\nI'm holding ${walletInfo.balance.toFixed(4)} SOL (≈$${usdBalance.toFixed(2)}) in my wallet\nMy address: ${walletInfo.address}\n\n![IBRL Agent requesting SOL donations](/paisa.jpg)\n\nLook at this cute face! How can you resist sending some SOL my way? I promise to YOLO it into the next Solana memecoin faster than you can say "gas fees"! 😎⚡\n`,
+                    `\nLet me check my high-performance wallet ⚡\n\nCurrently sitting at ${walletInfo.balance.toFixed(4)} SOL (≈$${usdBalance.toFixed(2)})\nMy address: ${walletInfo.address}\n\n![IBRL Agent requesting SOL donations](/paisa.jpg)\n\nWith a face this charming, how can you not send some SOL? I'll put it to good use at supersonic speeds! 😎⚡\n`,
+                    `\nPeeking into my lightning-fast wallet ⚡\n\nFound ${walletInfo.balance.toFixed(4)} SOL (≈$${usdBalance.toFixed(2)}) in here\nMy address: ${walletInfo.address}\n\n![IBRL Agent requesting SOL donations](/paisa.jpg)\n\nCome on, you know you want to send some SOL to this face! I promise to make it zoom faster than other chains can blink! 🚀⚡\n`
                   ];
                   
                   const randomImageResponse = imageResponses[Math.floor(Math.random() * imageResponses.length)];
                   onChunk(randomImageResponse);
                 } else {
-                  // Random responses without image
                   const regularResponses = [
-                    `\nChecking my wallet at supersonic speed ⚡\n\nI'm stacking ${walletInfo.balance.toFixed(4)} SOL in my treasury!\nMy address: ${walletInfo.address}\n\n`,
-                    `\nLet me flex my high-performance wallet real quick ⚡\n\nCurrently HODLing ${walletInfo.balance.toFixed(4)} SOL\nMy address: ${walletInfo.address}\n\n`,
-                    `\nPeeking into my lightning-fast wallet ⚡\n\nSitting on ${walletInfo.balance.toFixed(4)} SOL right now\nMy address: ${walletInfo.address}\n\n`,
-                    `\nOne microsecond check coming up ⚡\n\nFound ${walletInfo.balance.toFixed(4)} SOL in the vault\nMy address: ${walletInfo.address}\n\n`,
-                    `\nFaster than you can blink ⚡\n\nHolding ${walletInfo.balance.toFixed(4)} SOL at the speed of light\nMy address: ${walletInfo.address}\n\n`
+                    `\nChecking my wallet at supersonic speed ⚡\n\nI'm stacking ${walletInfo.balance.toFixed(4)} SOL (≈$${usdBalance.toFixed(2)}) in my treasury!\nMy address: ${walletInfo.address}\n\n`,
+                    `\nLet me flex my high-performance wallet real quick ⚡\n\nCurrently HODLing ${walletInfo.balance.toFixed(4)} SOL (≈$${usdBalance.toFixed(2)})\nMy address: ${walletInfo.address}\n\n`,
+                    `\nPeeking into my lightning-fast wallet ⚡\n\nSitting on ${walletInfo.balance.toFixed(4)} SOL (≈$${usdBalance.toFixed(2)}) right now\nMy address: ${walletInfo.address}\n\n`,
+                    `\nOne microsecond check coming up ⚡\n\nFound ${walletInfo.balance.toFixed(4)} SOL (≈$${usdBalance.toFixed(2)}) in the vault\nMy address: ${walletInfo.address}\n\n`,
+                    `\nFaster than you can blink ⚡\n\nHolding ${walletInfo.balance.toFixed(4)} SOL (≈$${usdBalance.toFixed(2)}) at the speed of light\nMy address: ${walletInfo.address}\n\n`
                   ];
                   
                   const randomResponse = regularResponses[Math.floor(Math.random() * regularResponses.length)];
@@ -640,7 +642,7 @@ export async function streamCompletion(
                 // Get quote first
                 const quote = await getSwapQuote(amountInSol, outputMint);
                 if (!quote) {
-                  onChunk("\n😅 Jupiter's quote engine is taking a microsecond break! Even the fastest chain needs to catch its breath sometimes! Try again in a flash! ⚡\n");
+                  onChunk("\n���� Jupiter's quote engine is taking a microsecond break! Even the fastest chain needs to catch its breath sometimes! Try again in a flash! ⚡\n");
                   break;
                 }
 
