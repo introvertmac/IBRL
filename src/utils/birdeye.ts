@@ -31,7 +31,7 @@ function getBirdeyeApiKey(): string {
 export async function getTrendingTokens(limit: number = 10): Promise<BirdeyeToken[]> {
   try {
     const response = await fetch(
-      `https://public-api.birdeye.so/defi/tokenlist?sort_by=v24hUSD&sort_type=desc&offset=0&limit=${limit}`,
+      `https://public-api.birdeye.so/defi/tokenlist?sort_by=v24hChangePercent&sort_type=desc&offset=0&limit=${limit}`,
       {
         headers: {
           'accept': 'application/json',
