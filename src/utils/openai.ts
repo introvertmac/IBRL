@@ -356,8 +356,10 @@ export async function streamCompletion(
               
               if (priceChange >= 0) {
                 onChunk(`While other chains are stuck in traffic, we're just warming up! Remember, in the time it took you to read this, Solana processed about 10,000 transactions. 😎\n`);
+                onChunk('\n![Success Kid knows](/success_kid.jpg)\n');
               } else {
                 onChunk(`Just a minor speed bump - still faster than an Ethereum transaction confirmation! 😂\n`);
+                onChunk('\n![Honest Work](/honest-work-meme.jpeg)\n');
               }
               break;
 
@@ -377,7 +379,8 @@ export async function streamCompletion(
             case 'getWalletBalance':
               const address = JSON.parse(functionArgs).address;
               if (!validateSolanaAddress(address)) {
-                onChunk("\nHold up! That doesn't look like a valid Solana address. Are you sure you're not trying to give me an Ethereum address? �� Those are sooo 2021! ⚡\n");
+                onChunk("\nHold up! That doesn't look like a valid Solana address. Are you sure you're not trying to give me an Ethereum address?  Those are sooo 2021! ⚡\n");
+                onChunk('\n![Confused Math Lady](/Math_Lady_meme.jpg)\n');
                 break;
               }
               
@@ -494,7 +497,7 @@ export async function streamCompletion(
 
                 if (isFirstBalanceCheck) {
                   const imageResponses = [
-                    `\nChecking my own wallet at supersonic speed ⚡\n\nI'm holding ${walletInfo.balance.toFixed(4)} SOL (≈$${usdBalance.toFixed(2)}) in my wallet\nMy address: ${walletInfo.address}\n\n![IBRL Agent requesting SOL donations](/paisa.jpg)\n\nLook at this cute face! How can you resist sending some SOL my way? I promise to YOLO it into the next Solana memecoin faster than you can say "gas fees"! 😎⚡\n`,
+                    `\nChecking my own wallet at supersonic speed ⚡\n\nI'm holding ${walletInfo.balance.toFixed(4)} SOL (≈$${usdBalance.toFixed(2)}) in my wallet\nMy address: ${walletInfo.address}\n\n![IBRL Agent requesting SOL donations](/paisa.jpg)\n\nLook at this cute face! How can you resist sending some SOL my way? I promise to YOLO it into the next Solana memecoin faster than you can say "gas fees"! 😎��\n`,
                     `\nLet me check my high-performance wallet ⚡\n\nCurrently sitting at ${walletInfo.balance.toFixed(4)} SOL (≈$${usdBalance.toFixed(2)})\nMy address: ${walletInfo.address}\n\n![IBRL Agent requesting SOL donations](/paisa.jpg)\n\nWith a face this charming, how can you not send some SOL? I'll put it to good use at supersonic speeds! 😎⚡\n`,
                     `\nPeeking into my lightning-fast wallet ⚡\n\nFound ${walletInfo.balance.toFixed(4)} SOL (≈$${usdBalance.toFixed(2)}) in here\nMy address: ${walletInfo.address}\n\n![IBRL Agent requesting SOL donations](/paisa.jpg)\n\nCome on, you know you want to send some SOL to this face! I promise to make it zoom faster than other chains can blink! 🚀⚡\n`
                   ];
@@ -632,7 +635,7 @@ export async function streamCompletion(
                   onChunk(`🦎 Want more details? While other chains are still loading their data, [check out more on CoinGecko](https://www.coingecko.com/en/coins/${tokenInfo.coingeckoId}) \n\n`);
                 }
                 
-                onChunk("That's how we do it on Solana - query, analyze, and deliver before others even start their gas fee calculations! 🚀⚡\n");
+                onChunk("That's how we do it on Solana - query, analyze, and deliver before others even start their gas fee calculations! ���⚡\n");
               } catch (error) {
                 console.error('Token search error:', error);
                 onChunk("\n😅 Even my high-speed circuits need a breather sometimes! But hey, at least we're not waiting for Ethereum gas prices to drop! Try again in a microsecond! ⚡\n");
@@ -642,7 +645,7 @@ export async function streamCompletion(
             case 'getBirdeyeTrending':
               try {
                 const { limit } = JSON.parse(functionArgs);
-                onChunk("\n🦅 Scanning the Solana skies with Birdeye's precision! Let me show you what's trending faster than you can say 'gas fees'! ⚡\n\n");
+                onChunk("\n🦅 Scanning the Solana skies with Birdeye's precision! Let me show you what's trending faster than you can say 'gas fees'! ���\n\n");
                 
                 const tokens = await getTrendingTokens(limit);
                 
@@ -674,7 +677,7 @@ export async function streamCompletion(
                   onChunk(`Transaction signature: ${result.signature}\n\n`);
                   onChunk("🌊 Check your wallet - it should be there faster than you can say 'Ethereum gas fees'! 😎⚡\n");
                 } else if (result.message === 'invalid_address') {
-                  onChunk("\n😅 That wallet address looks more confused than an Ethereum user paying $100 in gas! Let's try again with a valid Solana address! ⚡\n");
+                  onChunk("\n���� That wallet address looks more confused than an Ethereum user paying $100 in gas! Let's try again with a valid Solana address! ⚡\n");
                 } else if (result.message === 'daily_limit_reached') {
                   onChunk("\n😏 Whoa there! Looks like you've already maxed out your daily devnet SOL! Even our lightning-fast faucet has limits - unlike Ethereum's gas fees! Try again tomorrow when your limit resets! ⚡\n");
                 } else {
@@ -739,7 +742,7 @@ export async function streamCompletion(
                 const { rates, error } = await getUSDCLendingRates();
                 
                 if (error) {
-                  onChunk(`\n😅 Oops! Couldn't fetch the lending rates: ${error}. Even Ethereum's gas fees are more predictable sometimes! Try again in a flash! ⚡\n`);
+                  onChunk(`\n😅 Oops! Couldn't fetch the lending rates: ${error}. Even Ethereum's gas fees are more predictable sometimes! Try again in a flash! ���\n`);
                   break;
                 }
 
@@ -748,7 +751,7 @@ export async function streamCompletion(
                   break;
                 }
 
-                onChunk("\n💰 Current USDC Lending Rates on Solana:\n\n");
+                onChunk("\n Current USDC Lending Rates on Solana:\n\n");
                 
                 const protocolNames: Record<string, string> = {
                   'drift': 'Drift',
@@ -779,6 +782,15 @@ export async function streamCompletion(
 
       if (delta?.content) {
         onChunk(delta.content);
+      }
+
+      if (delta?.content && (
+        delta.content.toLowerCase().includes('thank') ||
+        delta.content.toLowerCase().includes('good job') ||
+        delta.content.toLowerCase().includes('great') ||
+        delta.content.toLowerCase().includes('love')
+      )) {
+        onChunk('\n\n![That\'s what SEA said](/shesaid.png)\n');
       }
     }
   } catch (error: any) {
