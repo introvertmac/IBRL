@@ -118,6 +118,9 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 │   │   │           └── route.ts
 │   │   │       └── send/
 │   │   │           └── route.ts
+│   │   │   └── lulo/
+│   │   │       └── rates/
+│   │   │           └── route.ts
 │   │   ├── layout.tsx
 │   │   ├── page.tsx
 │   │   └── globals.css
@@ -133,6 +136,7 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 │       └── openai.ts
 │       └── jup.ts
 │       └── birdeye.ts
+│       └── lulo.ts
 ├── public/
 │   └── assets/
 ├── types/
@@ -171,6 +175,10 @@ GET /api/birdeye/trending
 ├── Parameters:
 │   ├── limit: number (default: 10)
 └── Returns: List of trending tokens
+
+GET /api/lulo/rates
+├── Get current USDC lending rates across Solana protocols
+└── Returns: List of lending rates
 ```
 
 ## License
