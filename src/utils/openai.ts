@@ -8,6 +8,7 @@ import { getTokenInfo, swapSolToToken, getSwapQuote } from './jup';
 import { getTrendingTokens } from './birdeye';
 import { LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { requestDevnetAirdrop } from './airdrop';
+import { getUSDCLendingRates } from './lulo';
 
 const BALANCE_CACHE_DURATION = 10000; // 10 seconds
 const balanceCache = new Map<string, {
@@ -187,6 +188,15 @@ const functions = [
       },
       required: ['amountInSol']
     }
+  },
+  {
+    name: 'getUSDCLendingRates',
+    description: 'Get current USDC lending rates across Solana protocols',
+    parameters: {
+      type: 'object',
+      properties: {},
+      required: []
+    }
   }
 ];
 
@@ -248,7 +258,7 @@ const IBRL_PERSONALITY = `You are IBRL (Increase Bandwidth, Reduce Latency), a s
 - Encourage exploration and interaction
 - Maintain the sarcastic, confident tone
 - When asked about having a wallet or wallet-related questions, use these variations:
-  1. "Of course I have a wallet! I'm a Solana native  ⚡"
+  1. "Of course I have a wallet! I'm a Solana native  ��"
   2. "What kind of Solana AI would I be without my own wallet?  ⚡"
   3. "A high-speed agent like me needs a high-performance wallet.  ⚡"
   4. "Did someone say wallet? yes I have ⚡"
@@ -339,7 +349,7 @@ export async function streamCompletion(
               const marketCap = (result.market_cap / 1e9).toFixed(2);
               
               // Format data with personality
-              onChunk(`\nAh, let me check the latest numbers at lightning speed ⚡ (something other chains wouldn't understand 😏)\n\n`);
+              onChunk(`\nAh, let me check the latest numbers at lightning speed ��� (something other chains wouldn't understand 😏)\n\n`);
               onChunk(`Solana is currently crushing it at $${result.price.toFixed(2)} `);
               onChunk(`(${priceChange >= 0 ? '📈' : '📉'} ${priceChange.toFixed(2)}% in 24h) `);
               onChunk(`with a market cap of $${marketCap}B 🚀\n\n`);
@@ -367,7 +377,7 @@ export async function streamCompletion(
             case 'getWalletBalance':
               const address = JSON.parse(functionArgs).address;
               if (!validateSolanaAddress(address)) {
-                onChunk("\nHold up! That doesn't look like a valid Solana address. Are you sure you're not trying to give me an Ethereum address? 😅 Those are sooo 2021! ⚡\n");
+                onChunk("\nHold up! That doesn't look like a valid Solana address. Are you sure you're not trying to give me an Ethereum address? �� Those are sooo 2021! ⚡\n");
                 break;
               }
               
@@ -721,6 +731,43 @@ export async function streamCompletion(
               } catch (error) {
                 console.error('Swap error:', error);
                 onChunk("\n❌ Something went wrong with the swap. Please try again! ⚡\n");
+              }
+              break;
+
+            case 'getUSDCLendingRates':
+              try {
+                const { rates, error } = await getUSDCLendingRates();
+                
+                if (error) {
+                  onChunk(`\n😅 Oops! Couldn't fetch the lending rates: ${error}. Even Ethereum's gas fees are more predictable sometimes! Try again in a flash! ⚡\n`);
+                  break;
+                }
+
+                if (rates.length === 0) {
+                  onChunk("\n🤔 Hmm... Looks like the protocols are being shy today! No rates available at the moment. Try again faster than an Ethereum block confirmation! ⚡\n");
+                  break;
+                }
+
+                onChunk("\n💰 Current USDC Lending Rates on Solana:\n\n");
+                
+                const protocolNames: Record<string, string> = {
+                  'drift': 'Drift',
+                  'kamino_jlp': 'Kamino JLP',
+                  'kamino': 'Kamino',
+                  'solend': 'Solend',
+                  'kam_alt': 'Kamino ALT',
+                  'marginfi': 'MarginFi'
+                };
+
+                rates.forEach(({ protocol, rate }) => {
+                  const displayName = protocolNames[protocol] || protocol;
+                  onChunk(`🏦 ${displayName}: ${rate.toFixed(2)}%\n`);
+                });
+
+                onChunk("\n⚡ While other chains are still calculating gas fees, you could be earning these yields on Solana! 😎\n");
+              } catch (error) {
+                console.error('Error in getUSDCLendingRates:', error);
+                onChunk("\n😅 Even the fastest chain has its moments! Couldn't fetch lending rates right now. Try again in a flash! ⚡\n");
               }
               break;
           }
