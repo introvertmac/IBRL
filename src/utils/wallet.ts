@@ -11,10 +11,11 @@ interface TransactionResult {
   message: string;
 }
 
-class AgentWallet {
+export class AgentWallet {
   private primaryConnection: Connection | null = null;
   private fallbackConnection: Connection | null = null;
   private isUsingFallback: boolean = false;
+  private baseUrl: string;
 
   constructor() {
     const quickNodeUrl = process.env.NEXT_PUBLIC_QUICKNODE_RPC_URL;
@@ -41,6 +42,9 @@ class AgentWallet {
     if (!quickNodeUrl && heliusApiKey) {
       this.primaryConnection = this.fallbackConnection;
     }
+
+    // Use appropriate base URL depending on environment
+    this.baseUrl = process.env.BOT_API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000';
   }
 
   public async getActiveConnection(): Promise<Connection> {
@@ -69,26 +73,41 @@ class AgentWallet {
     }
   }
 
-  async getBalance(): Promise<WalletBalance> {
-    try {
-      const connection = await this.getActiveConnection();
-      const response = await fetch('/api/wallet');
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch wallet balance');
+  async getBalance(): Promise<{ address: string; balance: number }> {
+    const maxRetries = 3;
+    let retryCount = 0;
+    
+    while (retryCount < maxRetries) {
+      try {
+        const response = await fetch(`${this.baseUrl}/api/wallet`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to get wallet balance');
+        }
+
+        return await response.json();
+      } catch (error) {
+        retryCount++;
+        if (retryCount === maxRetries) {
+          console.error('Error getting wallet balance after retries:', error);
+          throw error;
+        }
+        // Wait before retrying
+        await new Promise(resolve => setTimeout(resolve, 2000));
       }
-      
-      return response.json();
-    } catch (error) {
-      console.error('Error getting balance:', error);
-      throw error;
     }
+    throw new Error('Failed to get wallet balance after retries');
   }
 
   async sendSOL(recipient: string, amount: number): Promise<TransactionResult> {
     try {
       const connection = await this.getActiveConnection();
-      const response = await fetch('/api/wallet/send', {
+      const response = await fetch(`${this.baseUrl}/api/wallet/send`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -116,7 +135,7 @@ class AgentWallet {
       const connection = await this.getActiveConnection();
       const serializedTransaction = Buffer.from(transaction.serialize()).toString('base64');
       
-      const response = await fetch('/api/wallet/sign', {
+      const response = await fetch(`${this.baseUrl}/api/wallet/sign`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 

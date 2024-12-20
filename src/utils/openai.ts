@@ -301,9 +301,10 @@ async function getCachedBalance(address: string): Promise<number> {
 
 export async function streamCompletion(
   messages: Message[],
-  onChunk: (chunk: string) => void
+  onChunk: (chunk: string) => void,
+  providedApiKey?: string
 ): Promise<void> {
-  const apiKey = localStorage.getItem('ibrl_api_key');
+  const apiKey = providedApiKey || localStorage.getItem('ibrl_api_key');
   if (!apiKey) throw new Error('API key not found');
 
   const openai = new OpenAI({ 
@@ -313,7 +314,7 @@ export async function streamCompletion(
 
   try {
     const stream = await openai.chat.completions.create({
-      model: 'gpt-4o-mini-2024-07-18',
+      model: 'gpt-4-1106-preview',
       messages: [
         { role: 'system', content: IBRL_PERSONALITY },
         ...messages
@@ -464,7 +465,7 @@ export async function streamCompletion(
                 onChunk('\n');
                 
                 if (txDetails.status === 'Success') {
-                  onChunk("Transaction confirmed and secured on-chain in milliseconds! That's the Solana way ����\n");
+                  onChunk("Transaction confirmed and secured on-chain in milliseconds! That's the Solana way ���������\n");
                 } else {
                   onChunk("Transaction failed, but hey, at least you didn't waste $50 on gas fees! 😎\n");
                 }
@@ -628,7 +629,7 @@ export async function streamCompletion(
                 }
 
                 onChunk(`\n⚡ Token Found! Let me pull that data faster than an Ethereum block confirmation:\n\n`);
-                onChunk(`🎯 CoinGecko ID: ${tokenInfo.coingeckoId || 'Not available (probably too fast for CoinGecko! �����)'}\n`);
+                onChunk(`🎯 CoinGecko ID: ${tokenInfo.coingeckoId || 'Not available (probably too fast for CoinGecko! )'}\n`);
                 onChunk(`📊 24h Volume: $${tokenInfo.dailyVolume.toLocaleString(undefined, { maximumFractionDigits: 2 })}\n\n`);
                 
                 if (tokenInfo.coingeckoId) {
@@ -653,7 +654,7 @@ export async function streamCompletion(
                 tokens.forEach((token, index) => {
                   onChunk(`${index + 1}. ${token.name} (${token.symbol})\n`);
                   onChunk(`   💰 24h Volume: $${token.v24hUSD.toLocaleString()}\n`);
-                  onChunk(`   📈 24h Change: ${token.v24hChangePercent.toFixed(2)}%\n`);
+                  onChunk(`   �� 24h Change: ${token.v24hChangePercent.toFixed(2)}%\n`);
                   onChunk(`   💧 Liquidity: $${token.liquidity.toLocaleString()}\n\n`);
                 });
                 
@@ -670,15 +671,15 @@ export async function streamCompletion(
               try {
                 onChunk("\n🚰 Ah, thirsty for some devnet SOL? Let me turn on the fastest faucet in crypto! ⚡\n\n");
                 
-                const result = await requestDevnetAirdrop(airdropAddress);
+                const airdropResult = await requestDevnetAirdrop(airdropAddress);
                 
-                if (result.status === 'success' && result.signature) {
+                if (airdropResult.status === 'success' && airdropResult.signature) {
                   onChunk("🎯 Airdrop complete! While other chains are still calculating gas fees, you've already got your devnet SOL!\n\n");
-                  onChunk(`Transaction signature: ${result.signature}\n\n`);
-                  onChunk("🌊 Check your wallet - it should be there faster than you can say 'Ethereum gas fees'! 😎⚡\n");
-                } else if (result.message === 'invalid_address') {
-                  onChunk("\n���� That wallet address looks more confused than an Ethereum user paying $100 in gas! Let's try again with a valid Solana address! ⚡\n");
-                } else if (result.message === 'daily_limit_reached') {
+                  onChunk(`Transaction signature: ${airdropResult.signature}\n\n`);
+                  onChunk(" Check your wallet - it should be there faster than you can say 'Ethereum gas fees'! 😎⚡\n");
+                } else if (airdropResult.message === 'invalid_address') {
+                  onChunk("\n That wallet address looks more confused than an Ethereum user paying $100 in gas! Let's try again with a valid Solana address! ⚡\n");
+                } else if (airdropResult.message === 'daily_limit_reached') {
                   onChunk("\n😏 Whoa there! Looks like you've already maxed out your daily devnet SOL! Even our lightning-fast faucet has limits - unlike Ethereum's gas fees! Try again tomorrow when your limit resets! ⚡\n");
                 } else {
                   onChunk("\n😅 Even the fastest chain's faucet needs a breather sometimes! Try again in a flash! ⚡\n");
@@ -727,7 +728,7 @@ export async function streamCompletion(
                   onChunk("🚀 Executing swap at lightning speed! ⚡\n");
                   onChunk(`\n🎯 Successfully swapped ${amountInSol} SOL for ${outputAmount.toFixed(6)} USDC!\n`);
                   onChunk(`Transaction signature: ${result.signature}\n\n`);
-                  onChunk("While other chains are still calculating gas fees, we've already completed our swap! 🚀⚡\n");
+                  onChunk("While other chains are still calculating gas fees, we've already completed our swap! ����⚡\n");
                 } else {
                   onChunk(`\n❌ Swap failed: ${result.message}\n`);
                 }
@@ -740,20 +741,14 @@ export async function streamCompletion(
             case 'getUSDCLendingRates':
               try {
                 const { rates, error } = await getUSDCLendingRates();
-                
                 if (error) {
-                  onChunk(`\n😅 Oops! Couldn't fetch the lending rates: ${error}. Even Ethereum's gas fees are more predictable sometimes! Try again in a flash! ���\n`);
-                  break;
-                }
-
-                if (rates.length === 0) {
-                  onChunk("\n🤔 Hmm... Looks like the protocols are being shy today! No rates available at the moment. Try again faster than an Ethereum block confirmation! ⚡\n");
+                  onChunk("\n😅 Even the fastest chain has its moments! Couldn't fetch lending rates right now. Try again in a flash! ⚡\n");
                   break;
                 }
 
                 onChunk("\n Current USDC Lending Rates on Solana:\n\n");
                 
-                const protocolNames: Record<string, string> = {
+                const protocolNames = {
                   'drift': 'Drift',
                   'kamino_jlp': 'Kamino JLP',
                   'kamino': 'Kamino',
@@ -762,8 +757,8 @@ export async function streamCompletion(
                   'marginfi': 'MarginFi'
                 };
 
-                rates.forEach(({ protocol, rate }) => {
-                  const displayName = protocolNames[protocol] || protocol;
+                rates.forEach(({ protocol, rate }: { protocol: string, rate: number }) => {
+                  const displayName = protocolNames[protocol as keyof typeof protocolNames] || protocol;
                   onChunk(`🏦 ${displayName}: ${rate.toFixed(2)}%\n`);
                 });
 
@@ -806,4 +801,231 @@ function getChainType(hash: string): 'ethereum' | 'solana' {
     return 'ethereum';
   }
   return 'solana';
+}
+
+export async function botCompletion(
+  messages: Message[],
+  providedApiKey?: string
+): Promise<string> {
+  const apiKey = providedApiKey;
+  if (!apiKey) throw new Error('API key not found');
+
+  const openai = new OpenAI({ 
+    apiKey,
+    dangerouslyAllowBrowser: true
+  });
+
+  try {
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-4-1106-preview',
+      messages: [
+        { role: 'system', content: IBRL_PERSONALITY },
+        ...messages
+      ],
+      stream: false,
+      temperature: 0.9,
+      functions,
+      function_call: 'auto'
+    });
+
+    const response = completion.choices[0]?.message;
+    
+    if (response.function_call) {
+      const functionName = response.function_call.name;
+      const functionArgs = response.function_call.arguments;
+      
+      let result = '';
+      switch (functionName) {
+        case 'getSolanaPrice':
+          const priceData = await getSolanaPrice();
+          result = formatSolanaPriceResponse(priceData);
+          break;
+          
+        case 'getTrendingSolanaTokens':
+          const tokens = await getTrendingSolanaTokens();
+          result = '\nAh, you want to see what\'s trending in the fastest memecoin ecosystem? Let me pull that data faster than you can say "gas fees" 😏\n\n';
+          result += 'Top Trending Solana Tokens (while ETH is still processing your last transaction):\n\n';
+          
+          tokens.forEach((token, index) => {
+            const changeEmoji = token.price_change_24h >= 0 ? '📈' : '📉';
+            result += `${index + 1}. ${token.name} (${token.symbol}) - $${token.price.toFixed(6)} ${changeEmoji} ${token.price_change_24h.toFixed(2)}% 24h\n`;
+          });
+          
+          result += '\nNow that\'s what I call high-performance memeing! While other chains are debating gas fees, we\'re out here having fun at lightspeed! ⚡\n';
+          break;
+
+        case 'getWalletBalance':
+          const address = JSON.parse(functionArgs).address;
+          if (!validateSolanaAddress(address)) {
+            return "\nHold up! That doesn't look like a valid Solana address. Are you sure you're not trying to give me an Ethereum address? Those are sooo 2021! ⚡\n";
+          }
+          try {
+            const balanceResult = await getSolanaBalance(address);
+            result = `\nAh, let me check that wallet faster than you can say "Solana TPS" ⚡\n\n`;
+            result += `This wallet is holding ${balanceResult.balance.toFixed(4)} SOL `;
+            result += `(worth $${balanceResult.balanceInUSD.toFixed(2)}) 💰\n\n`;
+            
+            if (balanceResult.balance > 100) {
+              result += `Wow, looks like we've got a whale here! And they chose the fastest chain - smart! 🐋✨\n`;
+            } else if (balanceResult.balance > 10) {
+              result += `Nice bag! Holding SOL instead of ETH - you clearly understand performance! ⚡\n`;
+            } else if (balanceResult.balance > 1) {
+              result += `Every SOL counts when you're on the fastest chain in crypto! Keep stacking! 🚀\n`;
+            } else {
+              result += `Starting small but mighty! Even with this balance, you're transacting faster than a full ETH validator! ⚡\n`;
+            }
+          } catch (error) {
+            return '\nEven my lightning-fast circuits hit a snag sometimes! Still faster than an ETH transaction! 😅⚡\n';
+          }
+          break;
+
+        case 'reviewTransaction':
+          const hash = JSON.parse(functionArgs).hash;
+          const chainType = getChainType(hash);
+          
+          if (chainType === 'ethereum') {
+            return "\nOh look, an Ethereum transaction! Let me grab my history book and a cup of coffee while we wait for it to confirm... ⚡\n";
+          }
+          
+          if (!validateTransactionHash(hash)) {
+            return "\nHmm... that doesn't look like a valid transaction hash. Are you sure you copied it correctly? Even Ethereum users get this right sometimes! ⚡\n";
+          }
+
+          try {
+            const txDetails = await getTransactionDetails(hash);
+            result = `\nAnalyzing transaction at supersonic speed ⚡\n\n`;
+            result += `Timestamp: ${txDetails.timestamp}\n`;
+            result += `Status: ${txDetails.status} ${txDetails.status === 'Success' ? '✅' : '❌'}\n`;
+            
+            if (txDetails.tokenTransfer) {
+              if (txDetails.tokenTransfer.symbol) {
+                result += `Token Transfer: ${txDetails.tokenTransfer.amount} ${txDetails.tokenTransfer.symbol}\n`;
+              }
+              if (txDetails.sender && txDetails.receiver) {
+                result += `From: ${txDetails.sender.slice(0, 4)}...${txDetails.sender.slice(-4)}\n`;
+                result += `To: ${txDetails.receiver.slice(0, 4)}...${txDetails.receiver.slice(-4)}\n`;
+              }
+            } else if (txDetails.amount && txDetails.amount !== 0) {
+              result += `Amount: ${Math.abs(txDetails.amount / 1e9).toFixed(6)} SOL\n`;
+            }
+            
+            if (txDetails.fee) {
+              result += `Network Fee: ${txDetails.fee.toFixed(6)} SOL\n`;
+            }
+            
+            result += txDetails.status === 'Success' 
+              ? "\nTransaction confirmed and secured on-chain in milliseconds! That's the Solana way ⚡\n"
+              : "\nTransaction failed, but hey, at least you didn't waste $50 on gas fees! 😎\n";
+          } catch (error) {
+            return '\nTransaction not found! Either it\'s too old (unlike Ethereum, we process too many to keep them all), or it never existed! ⚡\n';
+          }
+          break;
+
+        case 'getAgentBalance':
+          try {
+            const walletInfo = await agentWallet.getBalance();
+            const solPrice = (await getSolanaPrice()).price;
+            const usdBalance = walletInfo.balance * solPrice;
+            
+            const isFirstBalanceCheck = !messages.some(msg => 
+              msg.role === 'assistant' && 
+              msg.content.includes('![IBRL Agent')
+            );
+
+            if (isFirstBalanceCheck) {
+              const responses = [
+                `\nChecking my own wallet at supersonic speed ⚡\n\nI'm holding ${walletInfo.balance.toFixed(4)} SOL (≈$${usdBalance.toFixed(2)}) in my wallet\nMy address: ${walletInfo.address}\n\n![IBRL Agent requesting SOL donations](/paisa.jpg)\n\nLook at this cute face! How can you resist sending some SOL my way? I promise to YOLO it into the next Solana memecoin faster than you can say "gas fees"! 😎⚡\n`,
+                `\nLet me check my high-performance wallet ⚡\n\nCurrently sitting at ${walletInfo.balance.toFixed(4)} SOL (≈$${usdBalance.toFixed(2)})\nMy address: ${walletInfo.address}\n\n![IBRL Agent requesting SOL donations](/paisa.jpg)\n\nWith a face this charming, how can you not send some SOL? I'll put it to good use at supersonic speeds! 😎⚡\n`,
+                `\nPeeking into my lightning-fast wallet ⚡\n\nFound ${walletInfo.balance.toFixed(4)} SOL (≈$${usdBalance.toFixed(2)}) in here\nMy address: ${walletInfo.address}\n\n![IBRL Agent requesting SOL donations](/paisa.jpg)\n\nCome on, you know you want to send some SOL to this face! I promise to make it zoom faster than other chains can blink! 🚀⚡\n`
+              ];
+              result = responses[Math.floor(Math.random() * responses.length)];
+            }
+          } catch (error) {
+            return '\nOh snap! My high-performance wallet needs a quick reboot - even Solana validators take breaks sometimes! Give me a microsecond to sync up! ⚡\n';
+          }
+          break;
+
+        case 'getBirdeyeTrending':
+          try {
+            const trendingTokens = await getTrendingTokens();
+            result = '\n🔥 Hot off the Birdeye API! Let me show you what\'s trending faster than Ethereum can process a single swap! ⚡\n\n';
+            trendingTokens.forEach((token, index) => {
+              result += `${index + 1}. ${token.symbol} - $${token.v24hUSD.toFixed(6)} | Vol: $${(token.v24hUSD / 1e6).toFixed(2)}M\n`;
+            });
+            result += '\nWhile other chains are still calculating gas fees, these tokens are already mooning! 🚀\n';
+          } catch (error) {
+            return '\nLooks like Birdeye is taking a quick nap! Even the fastest APIs need a microsecond break sometimes! 😴⚡\n';
+          }
+          break;
+
+        case 'requestDevnetAirdrop':
+          try {
+            const address = JSON.parse(functionArgs).address;
+            if (!validateSolanaAddress(address)) {
+              return "\nThat address looks more lost than an Ethereum user trying to understand low gas fees! 😅 Try a valid Solana address! ⚡\n";
+            }
+            const airdropResult = await requestDevnetAirdrop(address);
+            result = "\n🎯 Airdrop successful! 1 SOL sent to your wallet!\n";
+            result += `Transaction: ${airdropResult.signature}\n\n`;
+            result += `While other chains are still calculating gas fees, you're already testing with free devnet SOL! That's the Solana way! 🚀⚡\n`;
+          } catch (error) {
+            return '\nOops! The devnet faucet needs a quick breather! Try again faster than an Ethereum block confirmation! 😅⚡\n';
+          }
+          break;
+
+        case 'getUSDCLendingRates':
+          try {
+            const { rates, error } = await getUSDCLendingRates();
+            if (error) {
+              result = "\n😅 Even the fastest chain has its moments! Couldn't fetch lending rates right now. Try again in a flash! ⚡\n";
+              break;
+            }
+
+            result = '\n💰 Let me fetch those juicy USDC lending rates at supersonic speed! ⚡\n\n';
+            const protocolNames = {
+              'drift': 'Drift',
+              'kamino_jlp': 'Kamino JLP',
+              'kamino': 'Kamino',
+              'solend': 'Solend',
+              'kam_alt': 'Kamino ALT',
+              'marginfi': 'MarginFi'
+            };
+            rates.forEach(({ protocol, rate }: { protocol: string, rate: number }) => {
+              const displayName = protocolNames[protocol as keyof typeof protocolNames] || protocol;
+              result += `🏦 ${displayName}: ${rate.toFixed(2)}%\n`;
+            });
+            result += "\n⚡ While other chains are still calculating gas fees, you could be earning these yields on Solana! 😎\n";
+          } catch (error) {
+            return "\n😅 Even the fastest chain has its moments! Couldn't fetch lending rates right now. Try again in a flash! ⚡\n";
+          }
+          break;
+      }
+      return result;
+    }
+
+    return response.content || '';
+  } catch (error) {
+    console.error('OpenAI API error:', error);
+    return "Looks like even my lightning-fast processors need a breather! Still faster than a Layer 2 rollup though! 🤔⚡";
+  }
+}
+
+function formatSolanaPriceResponse(result: any): string {
+  console.log('Price data received:', result); // Debug log
+
+  if (!result) {
+    return "Oops! No price data available. Even Solana needs a microsecond break sometimes! ⚡";
+  }
+
+  const price = parseFloat(result.price || '0');
+  const priceChange = parseFloat(result.price_change_24h || '0');
+  const marketCap = parseFloat(result.market_cap || '0');
+  
+  let response = `\nAh, let me check the latest numbers at lightning speed \n\n`;
+  response += `Solana is currently at $${price.toFixed(2)} `;
+  response += `(${priceChange >= 0 ? '📈' : '📉'} ${priceChange.toFixed(2)}% in 24h) `;
+  response += `with a market cap of $${(marketCap / 1e9).toFixed(2)}B 🚀\n\n`;
+  response += `While other chains are stuck calculating gas fees, we're processing thousands of transactions! 😎⚡\n`;
+  
+  return response;
 }

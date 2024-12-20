@@ -51,6 +51,13 @@ A sophisticated Solana-focused AI agent with chat interface.
   - Jupiter Swap
   - Birdeye API
 
+- **Multi-Platform Support**
+  - Telegram bot integration
+  - Cross-platform message syncing
+  - Real-time notifications
+  - Command-based interactions
+  - Inline keyboard support
+
 ## Prerequisites
 
 Before you begin, ensure you have the following installed:
@@ -68,6 +75,8 @@ CROSSMINT_API_KEY=your_crossmint_api_key
 CROSSMINT_COLLECTION_ID=your_crossmint_collection_id
 NEXT_PUBLIC_QUICKNODE_RPC_URL=your_quicknode_rpc_url # optional backup for helius
 NEXT_PUBLIC_BIRDEYE_API_KEY=your_birdeye_api_key
+TELEGRAM_BOT_TOKEN=your_telegram_bot_token
+TELEGRAM_WEBHOOK_URL=your_webhook_url # Optional: for production deployments
 ```
 
 ## Getting Started
