@@ -19,12 +19,17 @@ interface LuloResponse {
 
 const USDC_MINT = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
 
+const API_BASE_URL = typeof window !== 'undefined' 
+  ? window.location.origin 
+  : process.env.BOT_API_BASE_URL || 'http://localhost:3000';
+
 export async function getUSDCLendingRates(): Promise<{
   rates: { protocol: string; rate: number }[];
   error?: string;
 }> {
   try {
-    const response = await fetch('/api/lulo/rates');
+    const baseUrl = API_BASE_URL.replace('@', '');
+    const response = await fetch(`${baseUrl}/api/lulo/rates`);
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
