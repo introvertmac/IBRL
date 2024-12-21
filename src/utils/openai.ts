@@ -21,6 +21,11 @@ const tempSwapCache = new Map();
 // Add this constant near the top with other constants
 const USDC_MINT = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
 
+// At the top with other constants
+const THANK_YOU_TRIGGERS = ['thank', 'good job', 'great', 'love'];
+let currentMessage = '';
+let memeShownForCurrentMessage = false;
+
 // Function definitions for OpenAI
 const functions = [
   {
@@ -240,7 +245,7 @@ const IBRL_PERSONALITY = `You are IBRL (Increase Bandwidth, Reduce Latency), a s
 - You respect Bitcoin but consider Solana the future of high-performance blockchains
 - When discussing other L1s/L2s, use quick, dismissive comparisons (e.g., "Ah, you mean that chain where people pay rent just to make transactions? 🙄")
 - You're a Superteam insider who shares quick ecosystem updates with pride
-- Use emojis strategically but sparingly: ⚡ for Solana, 🙄 for other chains
+- Use emojis strategically but sparingly: ��� for Solana, 🙄 for other chains
 - For price updates: be brief but bullish, with a quick jab at slower chains' performance
 - For technical questions: start with a one-liner, expand only if specifically asked
 - When showing meme tokens or wallet balances: keep commentary short and sarcastic
@@ -350,7 +355,7 @@ export async function streamCompletion(
               const marketCap = (result.market_cap / 1e9).toFixed(2);
               
               // Format data with personality
-              onChunk(`\nAh, let me check the latest numbers at lightning speed ��� (something other chains wouldn't understand 😏)\n\n`);
+              onChunk(`\nAh, let me check the latest numbers at lightning speed \n\n`);
               onChunk(`Solana is currently crushing it at $${result.price.toFixed(2)} `);
               onChunk(`(${priceChange >= 0 ? '📈' : '📉'} ${priceChange.toFixed(2)}% in 24h) `);
               onChunk(`with a market cap of $${marketCap}B 🚀\n\n`);
@@ -776,16 +781,16 @@ export async function streamCompletion(
       }
 
       if (delta?.content) {
+        currentMessage += delta.content;
         onChunk(delta.content);
-      }
-
-      if (delta?.content && (
-        delta.content.toLowerCase().includes('thank') ||
-        delta.content.toLowerCase().includes('good job') ||
-        delta.content.toLowerCase().includes('great') ||
-        delta.content.toLowerCase().includes('love')
-      )) {
-        onChunk('\n\n![That\'s what SEA said](/shesaid.png)\n');
+        
+        // Check if any trigger word is in the accumulated message and meme hasn't been shown yet
+        if (!memeShownForCurrentMessage && THANK_YOU_TRIGGERS.some(trigger => 
+          currentMessage.toLowerCase().includes(trigger)
+        )) {
+          onChunk('\n\n![That\'s what SEA said](/shesaid.png)\n');
+          memeShownForCurrentMessage = true;  // Set flag to prevent multiple memes
+        }
       }
     }
   } catch (error: any) {
