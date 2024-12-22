@@ -77,6 +77,8 @@ NEXT_PUBLIC_QUICKNODE_RPC_URL=your_quicknode_rpc_url # optional backup for heliu
 NEXT_PUBLIC_BIRDEYE_API_KEY=your_birdeye_api_key
 TELEGRAM_BOT_TOKEN=your_telegram_bot_token
 TELEGRAM_WEBHOOK_URL=your_webhook_url # Optional: for production deployments
+OPENAI_API_KEY= your_openai_key
+BOT_API_BASE_URL=http://127.0.0.1:3000 # if running locally
 ```
 
 ## Getting Started
