@@ -733,7 +733,7 @@ export async function streamCompletion(
                   onChunk("🚀 Executing swap at lightning speed! ⚡\n");
                   onChunk(`\n🎯 Successfully swapped ${amountInSol} SOL for ${outputAmount.toFixed(6)} USDC!\n`);
                   onChunk(`Transaction signature: ${result.signature}\n\n`);
-                  onChunk("While other chains are still calculating gas fees, we've already completed our swap! ����⚡\n");
+                  onChunk("While other chains are still calculating gas fees, we've already completed our swap! ⚡\n");
                 } else {
                   onChunk(`\n❌ Swap failed: ${result.message}\n`);
                 }
