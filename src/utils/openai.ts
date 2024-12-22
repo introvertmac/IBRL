@@ -319,7 +319,7 @@ export async function streamCompletion(
 
   try {
     const stream = await openai.chat.completions.create({
-      model: 'gpt-4-1106-preview',
+      model: 'gpt-4o-mini-2024-07-18',
       messages: [
         { role: 'system', content: IBRL_PERSONALITY },
         ...messages
