@@ -9,6 +9,7 @@ A sophisticated Solana-focused AI agent with chat interface.
 [![Next.js](https://img.shields.io/badge/Next.js-14-black)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)](https://www.typescriptlang.org/)
 [![Solana Web3.js](https://img.shields.io/badge/Solana-Web3.js-purple)](https://solana.com/)
+[![Demo](https://img.shields.io/badge/Demo-Twitter-1DA1F2?style=flat&logo=twitter)](https://x.com/introvertmac007/status/1870788165080072227)
 
 </div>
 
