@@ -5,6 +5,9 @@
 
 A sophisticated Solana-focused AI agent with chat interface.
 
+Token Contract: [7wxyV4i7iZvayjGN9bXkgJMRnPcnwWnQTPtd9KWjN3vM](https://solscan.io/token/7wxyV4i7iZvayjGN9bXkgJMRnPcnwWnQTPtd9KWjN3vM)  
+Ticker: $IBRLC
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Next.js](https://img.shields.io/badge/Next.js-14-black)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)](https://www.typescriptlang.org/)
