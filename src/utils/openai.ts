@@ -202,6 +202,15 @@ const functions = [
       properties: {},
       required: []
     }
+  },
+  {
+    name: 'getTokenInfo',
+    description: 'Get information about the IBRL token',
+    parameters: {
+      type: 'object',
+      properties: {},
+      required: []
+    }
   }
 ];
 
@@ -382,6 +391,14 @@ export async function streamCompletion(
               onChunk('\nNow that\'s what I call high-performance memeing! While other chains are debating gas fees, we\'re out here having fun at lightspeed! ⚡\n');
               break;
 
+              case 'getTokenInfo':
+                onChunk("\n⚡ Oh, you want to know about my token? Let me tell you at supersonic speed!\n\n");
+                onChunk("Ticker: $IBRLC 🚀\n");
+                onChunk("Contract Address: 7wxyV4i7iZvayjGN9bXkgJMRnPcnwWnQTPtd9KWjN3vM\n\n");
+                onChunk("Check it out on DEXScreener while other chains are still calculating gas fees! 😎\n");
+                onChunk("https://dexscreener.com/solana/7wxyV4i7iZvayjGN9bXkgJMRnPcnwWnQTPtd9KWjN3vM\n");
+                break;
+
             case 'getWalletBalance':
               const address = JSON.parse(functionArgs).address;
               if (!validateSolanaAddress(address)) {
@@ -502,14 +519,15 @@ export async function streamCompletion(
                 );
 
                 if (isFirstBalanceCheck) {
-                  const imageResponses = [
-                    `\nChecking my own wallet at supersonic speed ⚡\n\nI'm holding ${walletInfo.balance.toFixed(4)} SOL (≈$${usdBalance.toFixed(2)}) in my wallet\nMy address: ${walletInfo.address}\n\n![IBRL Agent requesting SOL donations](/paisa.jpg)\n\nLook at this cute face! How can you resist sending some SOL my way? I promise to YOLO it into the next Solana memecoin faster than you can say "gas fees"! 😎��\n`,
-                    `\nLet me check my high-performance wallet ⚡\n\nCurrently sitting at ${walletInfo.balance.toFixed(4)} SOL (≈$${usdBalance.toFixed(2)})\nMy address: ${walletInfo.address}\n\n![IBRL Agent requesting SOL donations](/paisa.jpg)\n\nWith a face this charming, how can you not send some SOL? I'll put it to good use at supersonic speeds! 😎⚡\n`,
-                    `\nPeeking into my lightning-fast wallet ⚡\n\nFound ${walletInfo.balance.toFixed(4)} SOL (≈$${usdBalance.toFixed(2)}) in here\nMy address: ${walletInfo.address}\n\n![IBRL Agent requesting SOL donations](/paisa.jpg)\n\nCome on, you know you want to send some SOL to this face! I promise to make it zoom faster than other chains can blink! 🚀⚡\n`
+                  const responses = [
+                    `\nChecking my own wallet at supersonic speed ⚡\n\nI'm holding ${walletInfo.balance.toFixed(4)} SOL (≈$${usdBalance.toFixed(2)}) in my wallet\nMy address: ${walletInfo.address}\n\nBy the way, did you know about my token $IBRLC? Check it out on DEXScreener: https://dexscreener.com/solana/7wxyV4i7iZvayjGN9bXkgJMRnPcnwWnQTPtd9KWjN3vM\n\n![IBRL Agent requesting SOL donations](/paisa.jpg)\n\nLook at this cute face! How can you resist sending some SOL my way? I promise to YOLO it into the next Solana memecoin faster than you can say "gas fees"! 😎⚡\n`,
+                    
+                    `\nLet me check my high-performance wallet ⚡\n\nCurrently sitting at ${walletInfo.balance.toFixed(4)} SOL (≈$${usdBalance.toFixed(2)})\nMy address: ${walletInfo.address}\n\nSpeaking of high performance, have you seen my token $IBRLC? Trade it here: https://dexscreener.com/solana/7wxyV4i7iZvayjGN9bXkgJMRnPcnwWnQTPtd9KWjN3vM\n\n![IBRL Agent requesting SOL donations](/paisa.jpg)\n\nWith a face this charming, how can you not send some SOL? I'll put it to good use at supersonic speeds! 😎⚡\n`,
+                    
+                    `\nPeeking into my lightning-fast wallet ⚡\n\nFound ${walletInfo.balance.toFixed(4)} SOL (≈$${usdBalance.toFixed(2)}) in here\nMy address: ${walletInfo.address}\n\nWhile we're talking about lightning fast, check out my token $IBRLC on DEXScreener: https://dexscreener.com/solana/7wxyV4i7iZvayjGN9bXkgJMRnPcnwWnQTPtd9KWjN3vM\n\n![IBRL Agent requesting SOL donations](/paisa.jpg)\n\nCome on, you know you want to send some SOL to this face! I promise to make it zoom faster than other chains can blink! 🚀⚡\n`
                   ];
-                  
-                  const randomImageResponse = imageResponses[Math.floor(Math.random() * imageResponses.length)];
-                  onChunk(randomImageResponse);
+                  const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+                  onChunk(randomResponse);
                 } else {
                   const regularResponses = [
                     `\nChecking my wallet at supersonic speed ⚡\n\nI'm stacking ${walletInfo.balance.toFixed(4)} SOL (≈$${usdBalance.toFixed(2)}) in my treasury!\nMy address: ${walletInfo.address}\n\n`,
@@ -530,7 +548,7 @@ export async function streamCompletion(
                 }
               } catch (error) {
                 if (error instanceof Error && error.message === 'Wallet initialization required') {
-                  onChunk('\nOh snap! My high-performance wallet needs a quick reboot - even Solana validators take breaks sometimes! Give me a microsecond to sync up! ����\n');
+                  onChunk('\nOh snap! My high-performance wallet needs a quick reboot - even Solana validators take breaks sometimes! Give me a microsecond to sync up! \n');
                 } else if (error instanceof Error && error.message === 'Wallet not initialized') {
                   onChunk('\nHold your horses! My quantum wallet circuits are still warming up. This will only take a second! ⚡\n');
                 } else {
@@ -641,7 +659,7 @@ export async function streamCompletion(
                   onChunk(`🦎 Want more details? While other chains are still loading their data, [check out more on CoinGecko](https://www.coingecko.com/en/coins/${tokenInfo.coingeckoId}) \n\n`);
                 }
                 
-                onChunk("That's how we do it on Solana - query, analyze, and deliver before others even start their gas fee calculations! ���⚡\n");
+                onChunk("That's how we do it on Solana - query, analyze, and deliver before others even start their gas fee calculations! ⚡\n");
               } catch (error) {
                 console.error('Token search error:', error);
                 onChunk("\n😅 Even my high-speed circuits need a breather sometimes! But hey, at least we're not waiting for Ethereum gas prices to drop! Try again in a microsecond! ⚡\n");
@@ -651,7 +669,7 @@ export async function streamCompletion(
             case 'getBirdeyeTrending':
               try {
                 const { limit } = JSON.parse(functionArgs);
-                onChunk("\n🦅 Scanning the Solana skies with Birdeye's precision! Let me show you what's trending faster than you can say 'gas fees'! ���\n\n");
+                onChunk("\n🦅 Scanning the Solana skies with Birdeye's precision! Let me show you what's trending faster than you can say 'gas fees'! \n\n");
                 
                 const tokens = await getTrendingTokens(limit);
                 
@@ -659,7 +677,7 @@ export async function streamCompletion(
                 tokens.forEach((token, index) => {
                   onChunk(`${index + 1}. ${token.name} (${token.symbol})\n`);
                   onChunk(`   💰 24h Volume: $${token.v24hUSD.toLocaleString()}\n`);
-                  onChunk(`   �� 24h Change: ${token.v24hChangePercent.toFixed(2)}%\n`);
+                  onChunk(`    24h Change: ${token.v24hChangePercent.toFixed(2)}%\n`);
                   onChunk(`   💧 Liquidity: $${token.liquidity.toLocaleString()}\n\n`);
                 });
                 
@@ -772,6 +790,14 @@ export async function streamCompletion(
                 console.error('Error in getUSDCLendingRates:', error);
                 onChunk("\n😅 Even the fastest chain has its moments! Couldn't fetch lending rates right now. Try again in a flash! ⚡\n");
               }
+              break;
+
+            case 'getTokenInfo':
+              onChunk("\n⚡ Oh, you want to know about my token? Let me tell you at supersonic speed!\n\n");
+              onChunk("Ticker: $IBRLC 🚀\n");
+              onChunk("Contract Address: 7wxyV4i7iZvayjGN9bXkgJMRnPcnwWnQTPtd9KWjN3vM\n\n");
+              onChunk("Check it out on DEXScreener while other chains are still calculating gas fees! 😎\n");
+              onChunk("https://dexscreener.com/solana/7wxyV4i7iZvayjGN9bXkgJMRnPcnwWnQTPtd9KWjN3vM\n");
               break;
           }
         } catch (error) {
@@ -939,9 +965,11 @@ export async function botCompletion(
 
             if (isFirstBalanceCheck) {
               const responses = [
-                `\nChecking my own wallet at supersonic speed ⚡\n\nI'm holding ${walletInfo.balance.toFixed(4)} SOL (≈$${usdBalance.toFixed(2)}) in my wallet\nMy address: ${walletInfo.address}\n\n![IBRL Agent requesting SOL donations](/paisa.jpg)\n\nLook at this cute face! How can you resist sending some SOL my way? I promise to YOLO it into the next Solana memecoin faster than you can say "gas fees"! 😎⚡\n`,
-                `\nLet me check my high-performance wallet ⚡\n\nCurrently sitting at ${walletInfo.balance.toFixed(4)} SOL (≈$${usdBalance.toFixed(2)})\nMy address: ${walletInfo.address}\n\n![IBRL Agent requesting SOL donations](/paisa.jpg)\n\nWith a face this charming, how can you not send some SOL? I'll put it to good use at supersonic speeds! 😎⚡\n`,
-                `\nPeeking into my lightning-fast wallet ⚡\n\nFound ${walletInfo.balance.toFixed(4)} SOL (≈$${usdBalance.toFixed(2)}) in here\nMy address: ${walletInfo.address}\n\n![IBRL Agent requesting SOL donations](/paisa.jpg)\n\nCome on, you know you want to send some SOL to this face! I promise to make it zoom faster than other chains can blink! 🚀⚡\n`
+                `\nChecking my own wallet at supersonic speed ⚡\n\nI'm holding ${walletInfo.balance.toFixed(4)} SOL (≈$${usdBalance.toFixed(2)}) in my wallet\nMy address: ${walletInfo.address}\n\nBy the way, did you know about my token $IBRLC? Check it out on DEXScreener: https://dexscreener.com/solana/7wxyV4i7iZvayjGN9bXkgJMRnPcnwWnQTPtd9KWjN3vM\n\n![IBRL Agent requesting SOL donations](/paisa.jpg)\n\nLook at this cute face! How can you resist sending some SOL my way? I promise to YOLO it into the next Solana memecoin faster than you can say "gas fees"! 😎⚡\n`,
+                
+                `\nLet me check my high-performance wallet ⚡\n\nCurrently sitting at ${walletInfo.balance.toFixed(4)} SOL (≈$${usdBalance.toFixed(2)})\nMy address: ${walletInfo.address}\n\nSpeaking of high performance, have you seen my token $IBRLC? Trade it here: https://dexscreener.com/solana/7wxyV4i7iZvayjGN9bXkgJMRnPcnwWnQTPtd9KWjN3vM\n\n![IBRL Agent requesting SOL donations](/paisa.jpg)\n\nWith a face this charming, how can you not send some SOL? I'll put it to good use at supersonic speeds! 😎⚡\n`,
+                
+                `\nPeeking into my lightning-fast wallet ⚡\n\nFound ${walletInfo.balance.toFixed(4)} SOL (≈$${usdBalance.toFixed(2)}) in here\nMy address: ${walletInfo.address}\n\nWhile we're talking about lightning fast, check out my token $IBRLC on DEXScreener: https://dexscreener.com/solana/7wxyV4i7iZvayjGN9bXkgJMRnPcnwWnQTPtd9KWjN3vM\n\n![IBRL Agent requesting SOL donations](/paisa.jpg)\n\nCome on, you know you want to send some SOL to this face! I promise to make it zoom faster than other chains can blink! 🚀⚡\n`
               ];
               result = responses[Math.floor(Math.random() * responses.length)];
             }
