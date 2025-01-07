@@ -132,7 +132,21 @@ export class AgentWallet {
 
   async signAndSendTransaction(transaction: VersionedTransaction): Promise<string> {
     try {
-      const connection = await this.getActiveConnection();
+      const connection = new Connection(
+        process.env.NEXT_PUBLIC_RPC_URL || 'https://api.mainnet-beta.solana.com',
+        {
+          httpHeaders: {
+            'Content-Type': 'application/json',
+          },
+          commitment: 'confirmed',
+          wsEndpoint: undefined, // Disable WebSocket
+          fetch: (input: RequestInfo | URL, init?: RequestInit) => {
+            return fetch(input, {
+              ...init
+            });
+          },
+        }
+      );
       const serializedTransaction = Buffer.from(transaction.serialize()).toString('base64');
       
       const response = await fetch(`${this.baseUrl}/api/wallet/sign`, {

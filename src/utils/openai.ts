@@ -20,6 +20,7 @@ const tempSwapCache = new Map();
 
 // Add this constant near the top with other constants
 const USDC_MINT = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
+const IBRLC_MINT = '7wxyV4i7iZvayjGN9bXkgJMRnPcnwWnQTPtd9KWjN3vM';
 
 // At the top with other constants
 const THANK_YOU_TRIGGERS = ['thank', 'good job', 'great', 'love'];
@@ -187,7 +188,8 @@ const functions = [
         },
         outputMint: {
           type: 'string',
-          description: 'Output token mint address',
+          description: 'Output token mint address (USDC or IBRLC)',
+          enum: [USDC_MINT, IBRLC_MINT],
           default: USDC_MINT
         }
       },
@@ -715,6 +717,14 @@ export async function streamCompletion(
             case 'swapSolToToken':
               try {
                 const { amountInSol, outputMint = USDC_MINT } = JSON.parse(functionArgs);
+                
+                // Add IBRLC-specific validation
+                if (outputMint === IBRLC_MINT && amountInSol < 0.01) {
+                  onChunk("\n❌ For $IBRLC swaps, minimum amount is 0.01 SOL due to liquidity constraints.\n");
+                  onChunk("Try increasing your swap amount! ⚡\n");
+                  return;
+                }
+
                 const walletInfo = await agentWallet.getBalance();
                 
                 if (!walletInfo || walletInfo.balance < amountInSol) {
@@ -729,7 +739,13 @@ export async function streamCompletion(
                 if (!result.quote) {
                   onChunk("\n❌ Failed to get swap quote. This could be because:\n");
                   onChunk(`• Amount in SOL: ${amountInSol}\n`);
-                  onChunk(`• Output token: ${outputMint === USDC_MINT ? 'USDC' : outputMint}\n`);
+                  onChunk(`• Output token: ${
+                    outputMint === USDC_MINT 
+                      ? 'USDC' 
+                      : outputMint === IBRLC_MINT 
+                        ? 'IBRLC' 
+                        : outputMint
+                  }\n`);
                   onChunk("• The amount might be too small (minimum is usually 0.001 SOL)\n");
                   onChunk("• There might not be enough liquidity\n");
                   onChunk("• The token pair might not be supported\n\n");
@@ -743,7 +759,7 @@ export async function streamCompletion(
 
                 onChunk(`\n📊 Swap Quote Details:\n`);
                 onChunk(`• Input: ${amountInSol} SOL\n`);
-                onChunk(`• Output: ${outputAmount.toFixed(6)} USDC\n`);
+                onChunk(`• Output: ${outputAmount.toFixed(6)} ${outputMint === USDC_MINT ? 'USDC' : 'IBRLC'}\n`);
                 onChunk(`• Price Impact: ${parseFloat(result.quote.priceImpactPct).toFixed(2)}%\n`);
                 onChunk(`• Route: ${route}\n\n`);
 

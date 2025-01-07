@@ -3,6 +3,7 @@ import { agentWallet } from './wallet';
 
 const USDC_MINT = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
 const SOL_MINT = 'So11111111111111111111111111111111111111112';
+const IBRLC_MINT = '7wxyV4i7iZvayjGN9bXkgJMRnPcnwWnQTPtd9KWjN3vM';
 
 interface JupiterTokenInfo {
   extensions: {
@@ -79,35 +80,42 @@ export async function getSwapQuote(
   outputMint: string = USDC_MINT
 ): Promise<SwapQuote | null> {
   try {
-    const amountInLamports = Math.round(amountInSol * LAMPORTS_PER_SOL);
+    const slippageBps = outputMint === IBRLC_MINT ? 1000 : 50;
+    const inputAmount = (amountInSol * LAMPORTS_PER_SOL).toString();
     
-    console.log('Requesting quote:', {
+    const queryParams = new URLSearchParams({
       inputMint: SOL_MINT,
       outputMint,
-      amountInLamports,
-      amountInSol
+      amount: inputAmount,
+      slippageBps: slippageBps.toString(),
+      onlyDirectRoutes: (outputMint === IBRLC_MINT).toString(),
+      asLegacyTransaction: 'false'
     });
 
-    const quoteUrl = `https://quote-api.jup.ag/v6/quote?inputMint=${SOL_MINT}&outputMint=${outputMint}&amount=${amountInLamports}&slippageBps=50`;
-    console.log('Quote URL:', quoteUrl);
+    const response = await fetch(`https://quote-api.jup.ag/v6/quote?${queryParams}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
 
-    const response = await fetch(quoteUrl);
-    const responseText = await response.text();
-    console.log('Raw response:', responseText);
-    
     if (!response.ok) {
-      console.error('Quote API error:', responseText);
+      const errorText = await response.text();
+      console.error('Jupiter quote error:', {
+        status: response.status,
+        statusText: response.statusText,
+        error: errorText,
+        params: {
+          inputMint: SOL_MINT,
+          outputMint,
+          amount: amountInSol,
+          slippageBps
+        }
+      });
       return null;
     }
 
-    const data = JSON.parse(responseText);
-    console.log('Parsed quote response:', data);
-    
-    if (!data || !data.outAmount) {
-      console.error('Invalid quote response:', data);
-      return null;
-    }
-
+    const data = await response.json();
     return data;
   } catch (error) {
     console.error('Error getting swap quote:', error);
@@ -120,16 +128,38 @@ export async function swapSolToToken(
   outputMint: string = USDC_MINT
 ): Promise<SwapResult> {
   try {
+    // Increase minimum amount for IBRLC due to liquidity constraints
+    if (outputMint === IBRLC_MINT && amountInSol < 0.01) {
+      return { 
+        status: 'error', 
+        message: 'minimum_amount_not_met',
+        quote: undefined
+      };
+    }
+
     const quote = await getSwapQuote(amountInSol, outputMint);
     if (!quote) {
       return { status: 'error', message: 'quote_failed' };
     }
 
-    const outputAmount = parseInt(quote.outAmount) / (outputMint === USDC_MINT ? 1000000 : LAMPORTS_PER_SOL);
+    // Get token decimals based on mint
+    const getTokenDecimals = (mint: string) => {
+      switch (mint) {
+        case USDC_MINT:
+          return 1000000; // 6 decimals
+        case IBRLC_MINT:
+          return 1000000000; // 9 decimals
+        default:
+          return LAMPORTS_PER_SOL; // 9 decimals
+      }
+    };
+
+    const outputDecimals = getTokenDecimals(outputMint);
+    const outputAmount = parseInt(quote.outAmount) / outputDecimals;
 
     console.log('Swap Quote:', {
       inputAmount: `${amountInSol} SOL`,
-      outputAmount: `${outputAmount.toFixed(6)} ${outputMint === USDC_MINT ? 'USDC' : 'SOL'}`,
+      outputAmount: `${outputAmount.toFixed(6)} ${outputMint === USDC_MINT ? 'USDC' : outputMint === IBRLC_MINT ? 'IBRLC' : 'SOL'}`,
       priceImpact: `${parseFloat(quote.priceImpactPct).toFixed(2)}%`,
       route: quote.routePlan.map((r) => r.swapInfo.label).join(' → '),
     });
@@ -141,7 +171,9 @@ export async function swapSolToToken(
 
     const response = await fetch('https://quote-api.jup.ag/v6/swap', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+      },
       body: JSON.stringify({
         quoteResponse: quote,
         userPublicKey: walletInfo.address,
@@ -151,7 +183,9 @@ export async function swapSolToToken(
       }),
     });
 
+    // Add better error handling
     if (!response.ok) {
+      console.error('Swap API error:', await response.text());
       throw new Error(`Swap request failed: ${response.statusText}`);
     }
 
@@ -166,6 +200,10 @@ export async function swapSolToToken(
     return { status: 'success', signature, quote };
   } catch (error) {
     console.error('Swap error:', error);
-    return { status: 'error', message: error instanceof Error ? error.message : 'transaction_failed' };
+    return { 
+      status: 'error', 
+      message: error instanceof Error ? error.message : 'transaction_failed',
+      quote: undefined
+    };
   }
 }
